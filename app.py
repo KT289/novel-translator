@@ -31,17 +31,17 @@ CACHE.mkdir(exist_ok=True)
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
 
-def get_cache(url):
-    p = CACHE / f"{cache_key(url)}.json"
+def get_cache(url, prefix=""):
+    p = CACHE / f"{prefix}{cache_key(url)}.json"
     if p.exists():
         return json.loads(p.read_text("utf-8"))
     return None
 
-def set_cache(url, data):
-    p = CACHE / f"{cache_key(url)}.json"
+def set_cache(url, data, prefix=""):
+    p = CACHE / f"{prefix}{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# ====================== FETCH (phiên bản đã fetch được text) ======================
+# ====================== FETCH (working version) ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -52,14 +52,23 @@ def fetch(url):
         raise Exception(f"Lỗi tải trang {r.status_code}")
     return BeautifulSoup(r.content, "lxml")
 
-# ====================== LẤY MỤC LỤC ======================
+# ====================== LẤY MỤC LỤC (hỗ trợ 3 site) ======================
 def get_chapters(index_url):
-    cached = get_cache(index_url)
-    if cached and "chapters" in cached:
-        return cached["chapters"]
+    cached = get_cache(index_url, prefix="chapters_")
+    if cached:
+        return cached
+
+    # SPECIAL FIX FOR 69SHUBA
+    original_url = index_url
+    if "69shuba.com" in index_url and (index_url.endswith('.htm') or index_url.endswith('.html')):
+        index_url = index_url.rsplit('/', 1)[0] + '/'
 
     soup = fetch(index_url)
-    selectors = ["#list a", ".listmain a", ".chapter-list a", ".mulu a", "#chapterList a", "dd a", ".book-list a"]
+
+    selectors = [
+        "#list a", ".listmain a", ".chapter-list a", ".mulu a", "#chapterList a",
+        "dd a", ".book-list a", ".chapters a", ".catalog a", ".zjlist a"
+    ]
     links = []
     for sel in selectors:
         links.extend(soup.select(sel))
@@ -75,14 +84,14 @@ def get_chapters(index_url):
                 seen.add(full_url)
                 chapters.append({"title": title, "url": full_url})
 
-    set_cache(index_url, {"chapters": chapters})
+    set_cache(original_url, chapters, prefix="chapters_")
     return chapters
 
-# ====================== LẤY NỘI DUNG (phiên bản đã lấy được text Trung) ======================
+# ====================== LẤY NỘI DUNG (working version) ======================
 def get_content(url):
-    cached = get_cache(url)
-    if cached and "content" in cached:
-        return cached["content"]
+    cached = get_cache(url, prefix="raw_")
+    if cached:
+        return cached
 
     soup = fetch(url)
     for tag in soup.find_all(["script", "style", "iframe", "header", "footer"]):
@@ -103,19 +112,25 @@ def get_content(url):
     cleaned = [line for line in lines if not re.search(r"(推荐|收藏|上一章|下一章|目录|返回|广告)", line)]
     final_text = "\n\n".join(cleaned)
 
-    set_cache(url, {"content": final_text})
+    set_cache(url, final_text, prefix="raw_")
     return final_text
 
-# ====================== DỊCH GROK (bắt buộc dịch sang Việt) ======================
-def translate(text, glossary="", custom_prompt=""):
+# ====================== DỊCH GROK (faster + cache translated) ======================
+def translate(text, glossary="", custom_prompt="", chapter_url=""):
     if not text.strip():
         return "Không có nội dung để dịch."
+
+    # Check translated cache first
+    if chapter_url:
+        cached = get_cache(chapter_url, prefix="translated_")
+        if cached:
+            return cached
 
     paragraphs = text.split("\n\n")
     chunks = []
     current = ""
     for p in paragraphs:
-        if len(current) + len(p) > 6000 and current:
+        if len(current) + len(p) > 7000 and current:   # larger chunk = faster
             chunks.append(current)
             current = p
         else:
@@ -128,7 +143,19 @@ def translate(text, glossary="", custom_prompt=""):
 
     results = []
     for i, chunk in enumerate(chunks):
-        prompt = f"""Bạn là dịch giả chuyên nghiệp tiểu thuyết Trung Quốc sang tiếng Việt. YÊU CẦU BẮT BUỘC: Dịch TOÀN BỘ văn bản sau sang tiếng Việt. {tone}. Sử dụng bảng thuật ngữ nếu có. Giữ nguyên văn phong kiếm hiệp, cổ trang. Chỉ trả về bản dịch sạch bằng tiếng Việt, không thêm bất kỳ chữ nào khác. {glossary_block} === VĂN BẢN CẦN DỊCH === {chunk} === KẾT THÚC VĂN BẢN ==="""
+        prompt = f"""Bạn là dịch giả chuyên nghiệp tiểu thuyết Trung Quốc sang tiếng Việt.
+
+YÊU CẦU BẮT BUỘC:
+- Dịch TOÀN BỘ văn bản sau sang tiếng Việt.
+- {tone}
+- Sử dụng bảng thuật ngữ nếu có.
+- Giữ nguyên văn phong kiếm hiệp, cổ trang.
+- Chỉ trả về bản dịch sạch bằng tiếng Việt, không thêm bất kỳ chữ nào khác.
+
+{glossary_block}
+=== VĂN BẢN CẦN DỊCH ===
+{chunk}
+=== KẾT THÚC VĂN BẢN ==="""
 
         try:
             response = XAI_CLIENT.chat.completions.create(
@@ -142,11 +169,17 @@ def translate(text, glossary="", custom_prompt=""):
             )
             results.append(response.choices[0].message.content.strip())
             if i < len(chunks) - 1:
-                time.sleep(1.5)
+                time.sleep(0.8)   # faster than before
         except Exception as e:
             results.append(f"[Lỗi dịch chunk {i+1}: {str(e)}]")
 
-    return "\n\n".join(results)
+    final = "\n\n".join(results)
+
+    # Save translated cache
+    if chapter_url:
+        set_cache(chapter_url, final, prefix="translated_")
+
+    return final
 
 # ====================== ROUTES ======================
 @app.route("/")
@@ -173,7 +206,8 @@ def api_translate():
         raw_text = get_content(chapter_url)
         if not raw_text:
             return jsonify({"error": "Không tìm thấy nội dung chương"}), 500
-        viet_text = translate(raw_text, glossary, custom_prompt)
+
+        viet_text = translate(raw_text, glossary, custom_prompt, chapter_url)
         return jsonify({"translation": viet_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
