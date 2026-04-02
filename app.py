@@ -1,7 +1,7 @@
 import os, re, json, time, hashlib
 from pathlib import Path
 from urllib.parse import urljoin
-import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
 from google import genai
@@ -12,22 +12,9 @@ GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
 
-HDR = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Cache-Control": "max-age=0",
-}
-
-session = requests.Session()
-session.headers.update(HDR)
+scraper = cloudscraper.create_scraper(
+    browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False}
+)
 
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
@@ -43,13 +30,8 @@ def set_cache(url, data):
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
 def fetch(url):
-    r = session.get(url, timeout=20, allow_redirects=True)
+    r = scraper.get(url, timeout=20, allow_redirects=True)
     r.encoding = r.apparent_encoding or "utf-8"
-    if r.status_code == 403:
-        # Retry with different referer
-        retry_hdr = {**HDR, "Referer": url.rsplit("/", 1)[0] + "/"}
-        r = requests.get(url, headers=retry_hdr, timeout=20, allow_redirects=True)
-        r.encoding = r.apparent_encoding or "utf-8"
     if r.status_code != 200:
         raise Exception(f"Trang web trả về lỗi {r.status_code}. Trang có thể chặn truy cập tự động.")
     return BeautifulSoup(r.text, "lxml")
