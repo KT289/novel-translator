@@ -41,16 +41,34 @@ def set_cache(url, data, prefix=""):
     p = CACHE / f"{prefix}{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# ====================== FETCH (working version) ======================
+# ====================== FETCH (STRONG ANTI-403) ======================
 def fetch(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://www.google.com/",
     }
-    r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=25)
-    if r.status_code != 200:
-        raise Exception(f"Lỗi tải trang {r.status_code}")
-    return BeautifulSoup(r.content, "lxml")
+    for attempt in range(4):
+        try:
+            r = cffi_requests.get(
+                url,
+                headers=headers,
+                impersonate="chrome124",
+                timeout=30
+            )
+            if r.status_code == 200:
+                return BeautifulSoup(r.content, "lxml")
+            if r.status_code == 403:
+                time.sleep(2 ** attempt)
+                continue
+            raise Exception(f"Lỗi {r.status_code}")
+        except Exception as e:
+            if attempt == 3:
+                raise Exception(f"Không thể tải trang (Cloudflare 403): {str(e)}")
+            time.sleep(2)
+    raise Exception("Không thể bypass Cloudflare")
 
 # ====================== LẤY MỤC LỤC (hỗ trợ 3 site) ======================
 def get_chapters(index_url):
@@ -58,17 +76,12 @@ def get_chapters(index_url):
     if cached:
         return cached
 
-    # SPECIAL FIX FOR 69SHUBA
     original_url = index_url
     if "69shuba.com" in index_url and (index_url.endswith('.htm') or index_url.endswith('.html')):
         index_url = index_url.rsplit('/', 1)[0] + '/'
 
     soup = fetch(index_url)
-
-    selectors = [
-        "#list a", ".listmain a", ".chapter-list a", ".mulu a", "#chapterList a",
-        "dd a", ".book-list a", ".chapters a", ".catalog a", ".zjlist a"
-    ]
+    selectors = ["#list a", ".listmain a", ".chapter-list a", ".mulu a", "#chapterList a", "dd a", ".book-list a", ".chapters a"]
     links = []
     for sel in selectors:
         links.extend(soup.select(sel))
@@ -87,7 +100,7 @@ def get_chapters(index_url):
     set_cache(original_url, chapters, prefix="chapters_")
     return chapters
 
-# ====================== LẤY NỘI DUNG (working version) ======================
+# ====================== LẤY NỘI DUNG ======================
 def get_content(url):
     cached = get_cache(url, prefix="raw_")
     if cached:
@@ -115,12 +128,12 @@ def get_content(url):
     set_cache(url, final_text, prefix="raw_")
     return final_text
 
-# ====================== DỊCH GROK (faster + cache translated) ======================
+# ====================== DỊCH GROK (nhanh + cache) ======================
 def translate(text, glossary="", custom_prompt="", chapter_url=""):
     if not text.strip():
         return "Không có nội dung để dịch."
 
-    # Check translated cache first
+    # Check translated cache
     if chapter_url:
         cached = get_cache(chapter_url, prefix="translated_")
         if cached:
@@ -130,7 +143,7 @@ def translate(text, glossary="", custom_prompt="", chapter_url=""):
     chunks = []
     current = ""
     for p in paragraphs:
-        if len(current) + len(p) > 7000 and current:   # larger chunk = faster
+        if len(current) + len(p) > 7000 and current:
             chunks.append(current)
             current = p
         else:
@@ -169,13 +182,12 @@ YÊU CẦU BẮT BUỘC:
             )
             results.append(response.choices[0].message.content.strip())
             if i < len(chunks) - 1:
-                time.sleep(0.8)   # faster than before
+                time.sleep(0.8)
         except Exception as e:
             results.append(f"[Lỗi dịch chunk {i+1}: {str(e)}]")
 
     final = "\n\n".join(results)
 
-    # Save translated cache
     if chapter_url:
         set_cache(chapter_url, final, prefix="translated_")
 
@@ -206,7 +218,6 @@ def api_translate():
         raw_text = get_content(chapter_url)
         if not raw_text:
             return jsonify({"error": "Không tìm thấy nội dung chương"}), 500
-
         viet_text = translate(raw_text, glossary, custom_prompt, chapter_url)
         return jsonify({"translation": viet_text})
     except Exception as e:
