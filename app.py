@@ -9,7 +9,6 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
 
-# === GROK (xAI) ===
 from openai import OpenAI
 from curl_cffi import requests as cffi_requests
 
@@ -47,7 +46,7 @@ def set_cache(url, data, prefix=""):
 
 def detect_site(url):
     host = (urlparse(url).hostname or "").lower()
-    if "hetushu" in host:
+    if "hetushu" in host or "hetubook" in host:
         return "hetushu"
     if "69shu" in host:
         return "69shuba"
@@ -56,16 +55,52 @@ def detect_site(url):
     return "generic"
 
 
-# ====================== FETCH (EXACT WORKING VERSION) ======================
-def fetch(url):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
-    }
-    r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=25)
-    if r.status_code != 200:
-        raise Exception(f"Lỗi tải trang {r.status_code}")
-    return BeautifulSoup(r.content, "lxml")
+# ====================== FETCH ======================
+# Profile "chrome" works for hetushu; "chrome124" + full headers for 69shuba/piaotia
+HEADERS_SIMPLE = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
+}
+HEADERS_FULL = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://www.google.com/",
+}
+
+
+def fetch(url, profile="chrome", headers=None):
+    h = headers or (HEADERS_SIMPLE if profile == "chrome" else HEADERS_FULL)
+    for attempt in range(4):
+        try:
+            r = cffi_requests.get(url, headers=h, impersonate=profile, timeout=25)
+            if r.status_code == 200:
+                return BeautifulSoup(r.content, "lxml")
+            if r.status_code == 403:
+                time.sleep(2 ** attempt)
+                continue
+            raise Exception(f"HTTP {r.status_code}")
+        except Exception as e:
+            if attempt == 3:
+                raise Exception(f"Không thể tải trang: {str(e)}")
+            time.sleep(2)
+    raise Exception("Không thể tải trang sau nhiều lần thử")
+
+
+def smart_fetch(url):
+    """Pick the best fetch profile for each site."""
+    site = detect_site(url)
+    if site == "hetushu":
+        # Simple profile works for hetushu
+        return fetch(url, profile="chrome", headers=HEADERS_SIMPLE)
+    else:
+        # 69shuba / piaotia need chrome124 + full headers
+        try:
+            return fetch(url, profile="chrome124", headers=HEADERS_FULL)
+        except Exception:
+            # Fallback to simple
+            return fetch(url, profile="chrome", headers=HEADERS_SIMPLE)
 
 
 # ====================== LẤY MỤC LỤC ======================
@@ -77,14 +112,18 @@ def get_chapters(index_url):
     original_url = index_url
     site = detect_site(index_url)
 
+    # hetushu: also try mobile URL for chapter list
+    if site == "hetushu":
+        index_url = _to_mobile_hetushu(index_url)
+
     # 69shuba: normalize .htm/.html → directory URL
     if site == "69shuba":
         if index_url.endswith(".htm") or index_url.endswith(".html"):
             index_url = index_url.rsplit("/", 1)[0] + "/"
 
-    soup = fetch(index_url)
+    soup = smart_fetch(index_url)
 
-    # All known selectors — covers hetushu, 69shuba, piaotia, generic
+    # All known selectors
     selectors = [
         "#list a", ".listmain a", ".chapter-list a", ".mulu a",
         "#chapterList a", "dd a", ".book-list a", ".chapters a",
@@ -107,6 +146,8 @@ def get_chapters(index_url):
                 seen.add(full_url)
                 chapters.append({"title": title, "url": full_url})
 
+    # For hetushu mobile URLs: convert chapter URLs back to www for content fetching
+    # (we'll convert to mobile again in get_content)
     set_cache(original_url, chapters, prefix="chapters_")
     return chapters
 
@@ -118,78 +159,93 @@ def get_content(url):
         return cached
 
     site = detect_site(url)
-    soup = fetch(url)
-
-    # Remove noise tags
-    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
-        tag.decompose()
 
     if site == "hetushu":
-        text = _extract_hetushu(soup)
+        text = _extract_hetushu(url)
     else:
-        text = _extract_generic(soup)
+        text = _extract_generic(url)
 
     if text:
         set_cache(url, text, prefix="raw_")
     return text
 
 
-def _extract_hetushu(soup):
+def _to_mobile_hetushu(url):
+    """Convert hetushu URL to mobile version (unscrambled content)."""
+    return url.replace("://www.hetushu.com", "://m.hetushu.com")
+
+
+def _remove_hetushu_watermarks(el):
+    """Remove hetushu's watermark tags: <s>和*图*书</s>, <dfn>, <samp>, <var>, <cite>."""
+    for tag in el.find_all(["s", "dfn", "samp", "var", "cite"]):
+        # Only remove if it contains watermark patterns
+        txt = tag.get_text()
+        if re.search(r'和.?图.?书|hetushu|www\.|\.com', txt):
+            tag.decompose()
+
+
+def _extract_hetushu(url):
     """
-    Hetushu scrambles paragraph order in HTML.
-    <p> tags inside #content may have id/eid attributes with numeric order.
-    We sort by those to restore correct reading order.
+    Hetushu's desktop site scrambles paragraph order via section.js.
+    Mobile version (m.hetushu.com) serves content in correct reading order.
     """
-    el = soup.select_one("#content")
-    if not el:
-        # fallback selectors
-        for sel in [".book-content", "#BookText", ".chapter-content"]:
-            el = soup.select_one(sel)
-            if el:
-                break
-    if not el:
+    # Strategy 1: Mobile URL — correct paragraph order, no JS scrambling
+    mobile_url = _to_mobile_hetushu(url)
+    try:
+        soup = fetch(mobile_url, profile="chrome", headers=HEADERS_SIMPLE)
+        el = soup.select_one("#content")
+        if not el:
+            for sel in [".book-content", "#BookText", ".chapter-content"]:
+                el = soup.select_one(sel)
+                if el:
+                    break
+        if el:
+            _remove_hetushu_watermarks(el)
+            for tag in el.find_all(["script", "style", "h2"]):
+                tag.decompose()
+            # Handle <br> tags
+            for br in el.find_all("br"):
+                br.replace_with("\n")
+            text = el.get_text(separator="\n")
+            lines = [l.strip() for l in text.split("\n") if l.strip()]
+            # Remove pipe characters used as separators (e.g. 安插|进)
+            lines = [l.replace("|", "") for l in lines]
+            cleaned = _clean_lines(lines)
+            if len(cleaned) > 100:
+                return cleaned
+    except Exception:
+        pass
+
+    # Strategy 2: Desktop fallback (paragraphs will be scrambled — still better than nothing)
+    try:
+        soup = fetch(url, profile="chrome", headers=HEADERS_SIMPLE)
+        el = soup.select_one("#content")
+        if not el:
+            return ""
+        _remove_hetushu_watermarks(el)
+        for tag in el.find_all(["script", "style", "h2", "div.mask"]):
+            tag.decompose()
+        # Remove mask divs
+        for div in el.find_all("div", class_="mask"):
+            div.decompose()
+        divs = el.find_all("div", recursive=False)
+        lines = []
+        for d in divs:
+            t = d.get_text(strip=True).replace("|", "")
+            if t and t != "……" or (t == "……"):
+                lines.append(t)
+        return _clean_lines(lines)
+    except Exception:
         return ""
 
-    # Collect all paragraphs with potential ordering info
-    children = el.find_all(["p", "div"], recursive=False)
-    if not children:
-        # If no direct children, try all <p> tags
-        children = el.find_all("p")
 
-    ordered_paras = []
-    for idx, child in enumerate(children):
-        text = child.get_text(strip=True)
-        if not text:
-            continue
-
-        # Look for ordering attributes: id="c1", eid="2", data-eid="3", etc.
-        order_num = None
-        for attr in ["eid", "data-eid", "data-order", "id"]:
-            val = child.get(attr, "")
-            if val:
-                m = re.search(r'(\d+)', str(val))
-                if m:
-                    order_num = int(m.group(1))
-                    break
-
-        if order_num is not None:
-            ordered_paras.append((order_num, text))
-        else:
-            # No ordering attr — use DOM position (large offset to put after ordered ones)
-            ordered_paras.append((10000 + idx, text))
-
-    # Check if we actually found meaningful ordering
-    real_order_count = sum(1 for num, _ in ordered_paras if num < 10000)
-    if real_order_count > len(ordered_paras) * 0.5:
-        # Most paragraphs have real ordering — sort by it
-        ordered_paras.sort(key=lambda x: x[0])
-
-    lines = [text for _, text in ordered_paras]
-    return _clean_lines(lines)
-
-
-def _extract_generic(soup):
+def _extract_generic(url):
     """Generic extraction for 69shuba, piaotia, and other sites."""
+    soup = smart_fetch(url)
+
+    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+        tag.decompose()
+
     selectors = [
         "#content", "#chaptercontent", ".chapter-content", "#BookText",
         ".read-content", ".txtnav", "#txt", ".book-content",
@@ -227,11 +283,12 @@ def _extract_generic(soup):
 
 
 def _clean_lines(lines):
-    """Remove navigation/ad noise from extracted text lines."""
+    """Remove navigation/ad/watermark noise."""
     noise = re.compile(
         r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
         r"投票|打赏|举报|纠错|求月票|求推荐|www\.|\.com|\.net|\.org|http|"
-        r"最新章节|手机阅读|书友|请牢记|备用域名|永久地址|一秒记住)"
+        r"最新章节|手机阅读|书友|请牢记|备用域名|永久地址|一秒记住|"
+        r"和.?图.?书|hetushu|hetubook)"
     )
     cleaned = [line for line in lines if not noise.search(line)]
     return "\n\n".join(cleaned)
@@ -251,7 +308,6 @@ def translate(text, glossary="", style="nguyenban", custom_prompt="", chapter_ur
     if not text.strip():
         return "Không có nội dung để dịch."
 
-    # Cache includes style so switching style re-translates
     cache_url = f"{chapter_url}__style_{style}" if chapter_url else ""
     if cache_url:
         cached = get_cache(cache_url, prefix="translated_")
