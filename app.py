@@ -42,45 +42,34 @@ def set_cache(url, data):
     p = CACHE / f"{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# ====================== FETCH (ANTI-CLOUDFLARE MẠNH) ======================
+# ====================== FETCH (ANTI-403) ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
         "Referer": "https://www.google.com/",
-        "Sec-Ch-Ua": '"Chromium";v="134", "Not;A=Brand";v="24"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-User": "?1",
-        "Sec-Fetch-Dest": "document",
-        "Upgrade-Insecure-Requests": "1",
     }
-
-    for attempt in range(3):  # retry 3 lần
+    for attempt in range(3):
         try:
             r = cffi_requests.get(
                 url,
                 headers=headers,
-                impersonate="chrome124",      # mạnh nhất hiện tại
-                timeout=30,
-                allow_redirects=True
+                impersonate="chrome124",
+                timeout=30
             )
             if r.status_code == 200:
                 return BeautifulSoup(r.content, "lxml")
             if r.status_code == 403:
-                time.sleep(2 ** attempt)      # backoff
+                time.sleep(2 ** attempt)
                 continue
             raise Exception(f"Lỗi {r.status_code}")
         except Exception as e:
             if attempt == 2:
-                raise Exception(f"Không thể tải trang (403 Cloudflare): {str(e)}")
+                raise Exception(f"Không thể tải trang (Cloudflare): {str(e)}")
             time.sleep(2)
-
-    raise Exception("Không thể bypass Cloudflare sau 3 lần thử")
+    raise Exception("Không thể bypass Cloudflare")
 
 # ====================== LẤY MỤC LỤC ======================
 def get_chapters(index_url):
@@ -188,4 +177,38 @@ YÊU CẦU BẮT BUỘC:
         except Exception as e:
             results.append(f"[Lỗi dịch chunk {i+1}: {str(e)}]")
 
-    return "\n
+    return "\n\n".join(results)
+
+# ====================== ROUTES ======================
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/api/chapters", methods=["POST"])
+def api_chapters():
+    url = request.json.get("url", "").strip()
+    try:
+        chapters = get_chapters(url)
+        return jsonify({"chapters": chapters})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/translate", methods=["POST"])
+def api_translate():
+    data = request.json
+    chapter_url = data.get("url", "").strip()
+    glossary = data.get("glossary", "")
+    custom_prompt = data.get("custom_prompt", "")
+
+    try:
+        raw_text = get_content(chapter_url)
+        if not raw_text:
+            return jsonify({"error": "Không tìm thấy nội dung chương"}), 500
+        viet_text = translate(raw_text, glossary, custom_prompt)
+        return jsonify({"translation": viet_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
