@@ -49,7 +49,7 @@ def detect_site(url):
         return "piaotia"
     return "generic"
 
-# ====================== FETCH (STRONG) ======================
+# ====================== FETCH ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
@@ -157,7 +157,7 @@ def _chapters_generic(url):
                     chapters.append({"title": title, "url": full_url})
     return chapters
 
-# ====================== GET CONTENT (giữ nguyên của bạn) ======================
+# ====================== GET CONTENT ======================
 def get_content(url):
     cached = get_cache(url, prefix="raw_")
     if cached:
@@ -177,9 +177,58 @@ def get_content(url):
         set_cache(url, text, prefix="raw_")
     return text
 
-# (Bạn có thể giữ nguyên các hàm _content_xxx của bạn, tôi không sửa vì chúng đã ổn)
+def _content_hetushu(url):
+    soup = fetch(url)
+    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+        tag.decompose()
+    for sel in ["#content", ".book-content", "#BookText", ".chapter-content"]:
+        el = soup.select_one(sel)
+        if el:
+            return _clean_text(el.get_text(separator="\n"))
+    return ""
 
-# ====================== TRANSLATE (đã tối ưu chất lượng) ======================
+def _content_69shuba(url):
+    soup = fetch(url)
+    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+        tag.decompose()
+    for sel in ["#chaptercontent", "#content", ".txtnav", "#BookText", ".chapter-content"]:
+        el = soup.select_one(sel)
+        if el:
+            for br in el.find_all("br"):
+                br.replace_with("\n")
+            return _clean_text(el.get_text(separator="\n"))
+    return ""
+
+def _content_piaotia(url):
+    soup = fetch(url)
+    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+        tag.decompose()
+    for sel in ["#content", "#BookText", ".chapter-content", ".mainbody"]:
+        el = soup.select_one(sel)
+        if el:
+            for br in el.find_all("br"):
+                br.replace_with("\n")
+            return _clean_text(el.get_text(separator="\n"))
+    return ""
+
+def _content_generic(url):
+    soup = fetch(url)
+    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+        tag.decompose()
+    selectors = ["#content", "#chaptercontent", ".chapter-content", "#BookText", ".read-content", ".txtnav", "#txt"]
+    for sel in selectors:
+        el = soup.select_one(sel)
+        if el:
+            return _clean_text(el.get_text(separator="\n"))
+    return ""
+
+def _clean_text(raw_text):
+    lines = [line.strip() for line in raw_text.split("\n") if line.strip()]
+    noise = re.compile(r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架)")
+    cleaned = [line for line in lines if not noise.search(line)]
+    return "\n\n".join(cleaned)
+
+# ====================== TRANSLATE ======================
 STYLE_PROMPTS = {
     "cotrang": "Dịch theo phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh, sử dụng từ Hán Việt phù hợp.",
     "hiendai": "Dịch tự nhiên, hiện đại, gần gũi, dễ đọc.",
@@ -189,10 +238,69 @@ STYLE_PROMPTS = {
 }
 
 def translate(text, glossary="", style="nguyenban", custom_prompt="", chapter_url=""):
-    # ... (giữ nguyên hàm translate của bạn, chỉ cần thay prompt nếu muốn, nhưng hiện tại của bạn đã khá ổn)
+    if not text.strip():
+        return "Không có nội dung để dịch."
 
-    # Tôi giữ nguyên hàm translate của bạn để không làm thay đổi nhiều
-    # Nếu bạn muốn tôi tối ưu thêm phần này thì nói nhé
+    cache_key_str = f"{chapter_url}__style_{style}" if chapter_url else ""
+    if cache_key_str:
+        cached = get_cache(cache_key_str, prefix="translated_")
+        if cached:
+            return cached
+
+    paragraphs = text.split("\n\n")
+    chunks = []
+    current = ""
+    for p in paragraphs:
+        if len(current) + len(p) > 7000 and current:
+            chunks.append(current)
+            current = p
+        else:
+            current = current + "\n\n" + p if current else p
+    if current:
+        chunks.append(current)
+
+    glossary_block = f"\n【BẢNG THUẬT NGỮ BẮT BUỘC】\n{glossary}\n" if glossary.strip() else ""
+    tone = custom_prompt.strip() if custom_prompt.strip() else STYLE_PROMPTS.get(style, STYLE_PROMPTS["nguyenban"])
+
+    results = []
+    for i, chunk in enumerate(chunks):
+        prompt = f"""Bạn là dịch giả tiểu thuyết Trung Quốc sang tiếng Việt chuyên nghiệp nhất.
+
+Yêu cầu bắt buộc:
+- Dịch toàn bộ đoạn văn bản sau sang tiếng Việt.
+- {tone}
+- Tên nhân vật, môn phái, võ công... theo bảng thuật ngữ.
+- Giữ nguyên phong cách văn học gốc.
+- Câu văn mượt mà, tự nhiên, hay.
+- Chỉ trả về bản dịch sạch, không chú thích.
+
+{glossary_block}
+=== VĂN BẢN CẦN DỊCH ===
+{chunk}
+=== HẾT ==="""
+
+        try:
+            response = XAI_CLIENT.chat.completions.create(
+                model="grok-4.20-non-reasoning",
+                messages=[
+                    {"role": "system", "content": "Bạn là dịch giả tiểu thuyết Trung-Việt hàng đầu."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=8000
+            )
+            results.append(response.choices[0].message.content.strip())
+            if i < len(chunks) - 1:
+                time.sleep(0.7)
+        except Exception as e:
+            results.append(f"[Lỗi dịch phần {i+1}]")
+
+    final = "\n\n".join(results)
+
+    if cache_key_str:
+        set_cache(cache_key_str, final, prefix="translated_")
+
+    return final
 
 # ====================== ROUTES ======================
 @app.route("/")
