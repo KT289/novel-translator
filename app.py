@@ -38,17 +38,6 @@ def set_cache(url, data, prefix=""):
     p = CACHE / f"{prefix}{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# ====================== DETECT SITE ======================
-def detect_site(url):
-    host = urlparse(url).hostname or ""
-    if "hetushu" in host:
-        return "hetushu"
-    elif "69shuba" in host or "69shu" in host:
-        return "69shuba"
-    elif "piaotia" in host or "piaotian" in host:
-        return "piaotia"
-    return "generic"
-
 # ====================== FETCH ======================
 def fetch(url):
     headers = {
@@ -61,8 +50,6 @@ def fetch(url):
         try:
             r = cffi_requests.get(url, headers=headers, impersonate="chrome124", timeout=30)
             if r.status_code == 200:
-                if "69shuba" in url or "piaotia" in url:
-                    r.encoding = "gbk"
                 return BeautifulSoup(r.text, "lxml")
             if r.status_code == 403:
                 time.sleep(2 ** attempt)
@@ -80,81 +67,24 @@ def get_chapters(index_url):
     if cached:
         return cached
 
-    site = detect_site(index_url)
-    if site == "hetushu":
-        chapters = _chapters_hetushu(index_url)
-    elif site == "69shuba":
-        chapters = _chapters_69shuba(index_url)
-    elif site == "piaotia":
-        chapters = _chapters_piaotia(index_url)
-    else:
-        chapters = _chapters_generic(index_url)
-
-    if chapters:
-        set_cache(index_url, chapters, prefix="chapters_")
-    return chapters
-
-def _chapters_hetushu(url):
-    soup = fetch(url)
+    soup = fetch(index_url)
     chapters = []
     seen = set()
-    for sel in ["#dir a", ".book-chapter a", ".chapter a", "dd a", "#list a", ".mulu a"]:
-        for a in soup.select(sel):
-            href = a.get("href", "")
-            title = a.get_text(strip=True)
-            if href and title and len(title) > 2:
-                full_url = urljoin(url, href)
-                if full_url not in seen:
-                    seen.add(full_url)
-                    chapters.append({"title": title, "url": full_url})
-    return chapters
 
-def _chapters_69shuba(url):
-    if url.endswith(".htm") or url.endswith(".html"):
-        url = url.rsplit("/", 1)[0] + "/"
-    soup = fetch(url)
-    chapters = []
-    seen = set()
-    for sel in [".catalog li a", ".mu_contain a", "#catalog a", ".chapterlist a", "#chapterList a", "dd a", ".listmain a"]:
-        for a in soup.select(sel):
-            href = a.get("href", "")
-            title = a.get_text(strip=True)
-            if href and title and len(title) > 2 and re.search(r"[\u4e00-\u9fff]", title):
-                full_url = urljoin(url, href)
-                if full_url not in seen:
-                    seen.add(full_url)
-                    chapters.append({"title": title, "url": full_url})
-    return chapters
+    # Selector mạnh cho hetushu.com
+    selectors = ["#dir a", ".book-chapter a", ".chapter a", "dd a", "#list a", ".mulu a", ".book-list a"]
 
-def _chapters_piaotia(url):
-    soup = fetch(url)
-    chapters = []
-    seen = set()
-    for sel in [".centent a", ".chapter-list a", "#list a", "ul.mulu_list a", "dd a", ".booklist a"]:
-        for a in soup.select(sel):
-            href = a.get("href", "")
-            title = a.get_text(strip=True)
-            if href and title and len(title) > 2 and re.search(r"[\u4e00-\u9fff]", title):
-                full_url = urljoin(url, href)
-                if full_url not in seen:
-                    seen.add(full_url)
-                    chapters.append({"title": title, "url": full_url})
-    return chapters
-
-def _chapters_generic(url):
-    soup = fetch(url)
-    selectors = ["#list a", ".listmain a", ".chapter-list a", ".mulu a", "#chapterList a", "dd a"]
-    chapters = []
-    seen = set()
     for sel in selectors:
         for a in soup.select(sel):
             href = a.get("href", "")
             title = a.get_text(strip=True)
-            if href and title and len(title) > 2 and re.search(r"[\u4e00-\u9fff]", title):
-                full_url = urljoin(url, href)
+            if href and title and len(title) > 2:
+                full_url = urljoin(index_url, href)
                 if full_url not in seen:
                     seen.add(full_url)
                     chapters.append({"title": title, "url": full_url})
+
+    set_cache(index_url, chapters, prefix="chapters_")
     return chapters
 
 # ====================== GET CONTENT ======================
@@ -163,87 +93,29 @@ def get_content(url):
     if cached:
         return cached
 
-    site = detect_site(url)
-    if site == "hetushu":
-        text = _content_hetushu(url)
-    elif site == "69shuba":
-        text = _content_69shuba(url)
-    elif site == "piaotia":
-        text = _content_piaotia(url)
-    else:
-        text = _content_generic(url)
-
-    if text:
-        set_cache(url, text, prefix="raw_")
-    return text
-
-def _content_hetushu(url):
     soup = fetch(url)
     for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
         tag.decompose()
-    for sel in ["#content", ".book-content", "#BookText", ".chapter-content"]:
-        el = soup.select_one(sel)
-        if el:
-            return _clean_text(el.get_text(separator="\n"))
-    return ""
 
-def _content_69shuba(url):
-    soup = fetch(url)
-    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
-        tag.decompose()
-    for sel in ["#chaptercontent", "#content", ".txtnav", "#BookText", ".chapter-content"]:
-        el = soup.select_one(sel)
-        if el:
-            for br in el.find_all("br"):
-                br.replace_with("\n")
-            return _clean_text(el.get_text(separator="\n"))
-    return ""
-
-def _content_piaotia(url):
-    soup = fetch(url)
-    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
-        tag.decompose()
-    for sel in ["#content", "#BookText", ".chapter-content", ".mainbody"]:
-        el = soup.select_one(sel)
-        if el:
-            for br in el.find_all("br"):
-                br.replace_with("\n")
-            return _clean_text(el.get_text(separator="\n"))
-    return ""
-
-def _content_generic(url):
-    soup = fetch(url)
-    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
-        tag.decompose()
     selectors = ["#content", "#chaptercontent", ".chapter-content", "#BookText", ".read-content", ".txtnav", "#txt"]
     for sel in selectors:
         el = soup.select_one(sel)
         if el:
-            return _clean_text(el.get_text(separator="\n"))
+            text = el.get_text(separator="\n")
+            lines = [line.strip() for line in text.split("\n") if line.strip()]
+            cleaned = [line for line in lines if not re.search(r"(推荐|收藏|上一章|下一章|目录|返回|广告)", line)]
+            final_text = "\n\n".join(cleaned)
+            set_cache(url, final_text, prefix="raw_")
+            return final_text
     return ""
 
-def _clean_text(raw_text):
-    lines = [line.strip() for line in raw_text.split("\n") if line.strip()]
-    noise = re.compile(r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架)")
-    cleaned = [line for line in lines if not noise.search(line)]
-    return "\n\n".join(cleaned)
-
 # ====================== TRANSLATE ======================
-STYLE_PROMPTS = {
-    "cotrang": "Dịch theo phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh, sử dụng từ Hán Việt phù hợp.",
-    "hiendai": "Dịch tự nhiên, hiện đại, gần gũi, dễ đọc.",
-    "langman": "Dịch lãng mạn, trữ tình, giàu cảm xúc.",
-    "satnghia": "Dịch sát nghĩa, chính xác từng câu.",
-    "nguyenban": "Giữ nguyên ý nghĩa, giọng văn và phong cách văn học gốc.",
-}
-
-def translate(text, glossary="", style="nguyenban", custom_prompt="", chapter_url=""):
+def translate(text, glossary="", custom_prompt="", chapter_url=""):
     if not text.strip():
         return "Không có nội dung để dịch."
 
-    cache_key_str = f"{chapter_url}__style_{style}" if chapter_url else ""
-    if cache_key_str:
-        cached = get_cache(cache_key_str, prefix="translated_")
+    if chapter_url:
+        cached = get_cache(chapter_url, prefix="translated_")
         if cached:
             return cached
 
@@ -259,22 +131,19 @@ def translate(text, glossary="", style="nguyenban", custom_prompt="", chapter_ur
     if current:
         chunks.append(current)
 
-    glossary_block = f"\n【BẢNG THUẬT NGỮ BẮT BUỘC】\n{glossary}\n" if glossary.strip() else ""
-    tone = custom_prompt.strip() if custom_prompt.strip() else STYLE_PROMPTS.get(style, STYLE_PROMPTS["nguyenban"])
+    tone = custom_prompt.strip() or "Giữ nguyên ý nghĩa, giọng văn và phong cách văn học gốc"
 
     results = []
     for i, chunk in enumerate(chunks):
-        prompt = f"""Bạn là dịch giả tiểu thuyết Trung Quốc sang tiếng Việt chuyên nghiệp nhất.
+        prompt = f"""Bạn là dịch giả chuyên nghiệp tiểu thuyết Trung Quốc sang tiếng Việt.
 
-Yêu cầu bắt buộc:
-- Dịch toàn bộ đoạn văn bản sau sang tiếng Việt.
+YÊU CẦU BẮT BUỘC:
+- Dịch TOÀN BỘ văn bản sau sang tiếng Việt.
 - {tone}
-- Tên nhân vật, môn phái, võ công... theo bảng thuật ngữ.
-- Giữ nguyên phong cách văn học gốc.
-- Câu văn mượt mà, tự nhiên, hay.
-- Chỉ trả về bản dịch sạch, không chú thích.
+- Tên nhân vật, môn phái, võ công... giữ nguyên theo bảng thuật ngữ nếu có.
+- Giữ nguyên văn phong kiếm hiệp, cổ trang.
+- Chỉ trả về bản dịch sạch bằng tiếng Việt, không thêm chú thích.
 
-{glossary_block}
 === VĂN BẢN CẦN DỊCH ===
 {chunk}
 === HẾT ==="""
@@ -292,13 +161,13 @@ Yêu cầu bắt buộc:
             results.append(response.choices[0].message.content.strip())
             if i < len(chunks) - 1:
                 time.sleep(0.7)
-        except Exception as e:
-            results.append(f"[Lỗi dịch phần {i+1}]")
+        except Exception:
+            results.append("[Lỗi dịch phần này]")
 
     final = "\n\n".join(results)
 
-    if cache_key_str:
-        set_cache(cache_key_str, final, prefix="translated_")
+    if chapter_url:
+        set_cache(chapter_url, final, prefix="translated_")
 
     return final
 
@@ -325,14 +194,13 @@ def api_translate():
     data = request.json
     chapter_url = data.get("url", "").strip()
     glossary = data.get("glossary", "")
-    style = data.get("style", "nguyenban")
     custom_prompt = data.get("custom_prompt", "")
 
     try:
         raw_text = get_content(chapter_url)
         if not raw_text:
             return jsonify({"error": "Không tìm thấy nội dung chương"}), 500
-        viet_text = translate(raw_text, glossary, style, custom_prompt, chapter_url)
+        viet_text = translate(raw_text, glossary, custom_prompt, chapter_url)
         return jsonify({"translation": viet_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
