@@ -332,8 +332,9 @@ async function startNovel(resumeIdx){
       openCh(resumeIdx);
     }
   }catch(e){
-    $('landingStatusText').textContent=e.message;
-    setTimeout(()=>{$('landingStatus').style.display='none'},3000);
+    $('landingStatusText').textContent='❌ '+e.message;
+    $('landingStatus').querySelector('.spinner').style.display='none';
+    setTimeout(()=>{$('landingStatus').style.display='none';$('landingStatus').querySelector('.spinner').style.display='block'},8000);
   }finally{$('landingBtn').disabled=false}
 }
 
