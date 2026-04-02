@@ -1,4 +1,5 @@
 import os, re, json, time, hashlib
+import requests
 from pathlib import Path
 from urllib.parse import urljoin
 import cloudscraper
@@ -12,8 +13,14 @@ GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
 
+# 1. Updated Scraper Setup to look more like a real user
 scraper = cloudscraper.create_scraper(
-    browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False}
+    browser={
+        'browser': 'chrome',
+        'platform': 'windows',
+        'desktop': True,
+        'mobile': False,
+    }
 )
 
 def cache_key(url):
@@ -29,12 +36,37 @@ def set_cache(url, data):
     p = CACHE / f"{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
+# 2. Updated Fetch Function with Fake Headers and Fallback
 def fetch(url):
-    r = scraper.get(url, timeout=20, allow_redirects=True)
-    r.encoding = r.apparent_encoding or "utf-8"
-    if r.status_code != 200:
-        raise Exception(f"Trang web trả về lỗi {r.status_code}. Trang có thể chặn truy cập tự động.")
-    return BeautifulSoup(r.text, "lxml")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6,zh;q=0.5",
+        "Referer": "https://www.google.com/",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site"
+    }
+    
+    try:
+        # First attempt: Cloudscraper
+        r = scraper.get(url, headers=headers, timeout=20, allow_redirects=True)
+        r.encoding = r.apparent_encoding or "utf-8"
+        
+        # Second attempt: If Cloudscraper is detected (403), fallback to standard requests
+        if r.status_code == 403:
+            r = requests.get(url, headers=headers, timeout=20, allow_redirects=True)
+            r.encoding = r.apparent_encoding or "utf-8"
+
+        if r.status_code != 200:
+            raise Exception(f"Trang web trả về lỗi {r.status_code}. Trang có thể đang chặn truy cập tự động.")
+            
+        return BeautifulSoup(r.text, "lxml")
+        
+    except Exception as e:
+         raise Exception(f"Không thể kết nối đến web: {str(e)}")
 
 def get_chapters(index_url):
     soup = fetch(index_url)
@@ -90,6 +122,7 @@ def get_content(url):
                and not re.search(r"(推荐|收藏|书签|书架|上一章|下一章|目录|返回|广告|加入书签|手机阅读|最新章节|本站|www\.|\.com|\.net|http)", l.strip())]
     return "\n\n".join(cleaned)
 
+# 3. Updated Translate logic with API limits fixing (Wait & Retry)
 def translate(text, glossary="", custom_prompt=""):
     client = genai.Client(api_key=GEMINI_KEY)
     max_chunk = 3000
@@ -109,7 +142,6 @@ def translate(text, glossary="", custom_prompt=""):
     tone = custom_prompt.strip() if custom_prompt.strip() else "Giữ nguyên ý nghĩa, giọng văn và phong cách văn học"
     results = []
     
-    # --- UPDATED LOGIC HERE ---
     i = 0
     while i < len(chunks):
         chunk = chunks[i]
@@ -135,13 +167,11 @@ Yêu cầu:
 
         except Exception as e:
             error_message = str(e)
-            # If Google blocks us due to limit (429), pause for 30 seconds and retry
+            # Auto Retry if limit hit
             if '429' in error_message or 'RESOURCE_EXHAUSTED' in error_message:
                 print(f"[Lỗi chunk {i+1}] Quá giới hạn API (429). Đang đợi 30 giây để thử lại...")
                 time.sleep(30)
-                # Notice we do NOT increment `i` here, so it retries this exact chunk!
             else:
-                # If it's a completely different error (e.g. safety filter, invalid text), skip chunk
                 print(f"[Lỗi chunk {i+1}]: {error_message}")
                 results.append(f"[Lỗi dịch chunk {i+1}: {error_message}]")
                 i += 1
