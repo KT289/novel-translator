@@ -28,7 +28,6 @@ XAI_CLIENT = OpenAI(
 CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
 
-# ====================== CACHE ======================
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
 
@@ -42,7 +41,7 @@ def set_cache(url, data):
     p = CACHE / f"{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# ====================== FETCH (working version) ======================
+# ====================== FETCH (phiên bản đã fetch được text) ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -79,7 +78,7 @@ def get_chapters(index_url):
     set_cache(index_url, {"chapters": chapters})
     return chapters
 
-# ====================== LẤY NỘI DUNG (working version) ======================
+# ====================== LẤY NỘI DUNG (phiên bản đã lấy được text Trung) ======================
 def get_content(url):
     cached = get_cache(url)
     if cached and "content" in cached:
@@ -107,12 +106,11 @@ def get_content(url):
     set_cache(url, {"content": final_text})
     return final_text
 
-# ====================== DỊCH GROK (STRONG VERSION) ======================
+# ====================== DỊCH GROK (bắt buộc dịch sang Việt) ======================
 def translate(text, glossary="", custom_prompt=""):
     if not text.strip():
         return "Không có nội dung để dịch."
 
-    # Chia chunk
     paragraphs = text.split("\n\n")
     chunks = []
     current = ""
@@ -130,19 +128,7 @@ def translate(text, glossary="", custom_prompt=""):
 
     results = []
     for i, chunk in enumerate(chunks):
-        prompt = f"""Bạn là dịch giả chuyên nghiệp tiểu thuyết Trung Quốc sang tiếng Việt.
-
-YÊU CẦU BẮT BUỘC:
-- Dịch TOÀN BỘ văn bản sau sang tiếng Việt.
-- {tone}
-- Sử dụng bảng thuật ngữ nếu có (ưu tiên tuyệt đối).
-- Giữ nguyên văn phong kiếm hiệp, cổ trang, huyền huyễn.
-- Chỉ trả về bản dịch sạch bằng tiếng Việt, KHÔNG thêm chú thích, không giải thích, không ghi "Dịch:".
-
-{glossary_block}
-=== VĂN BẢN CẦN DỊCH ===
-{chunk}
-=== KẾT THÚC VĂN BẢN ==="""
+        prompt = f"""Bạn là dịch giả chuyên nghiệp tiểu thuyết Trung Quốc sang tiếng Việt. YÊU CẦU BẮT BUỘC: Dịch TOÀN BỘ văn bản sau sang tiếng Việt. {tone}. Sử dụng bảng thuật ngữ nếu có. Giữ nguyên văn phong kiếm hiệp, cổ trang. Chỉ trả về bản dịch sạch bằng tiếng Việt, không thêm bất kỳ chữ nào khác. {glossary_block} === VĂN BẢN CẦN DỊCH === {chunk} === KẾT THÚC VĂN BẢN ==="""
 
         try:
             response = XAI_CLIENT.chat.completions.create(
