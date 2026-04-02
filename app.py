@@ -1,27 +1,18 @@
 import os, re, json, time, hashlib
-import requests
 from pathlib import Path
 from urllib.parse import urljoin
-import cloudscraper
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
 from google import genai
+
+# NEW: Import the ultimate Cloudflare bypasser
+from curl_cffi import requests as cffi_requests
 
 app = Flask(__name__)
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
-
-# 1. Updated Scraper Setup to look more like a real user
-scraper = cloudscraper.create_scraper(
-    browser={
-        'browser': 'chrome',
-        'platform': 'windows',
-        'desktop': True,
-        'mobile': False,
-    }
-)
 
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
@@ -36,32 +27,30 @@ def set_cache(url, data):
     p = CACHE / f"{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# 2. Updated Fetch Function with Fake Headers and Fallback
+# --- UPDATED FETCH FUNCTION ---
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6,zh;q=0.5",
+        "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8,zh;q=0.7,en-US;q=0.6",
         "Referer": "https://www.google.com/",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "cross-site"
     }
     
     try:
-        # First attempt: Cloudscraper
-        r = scraper.get(url, headers=headers, timeout=20, allow_redirects=True)
+        # impersonate="chrome" perfectly mimics a real browser's internal signatures
+        r = cffi_requests.get(
+            url, 
+            headers=headers, 
+            impersonate="chrome", 
+            timeout=20, 
+            allow_redirects=True
+        )
         r.encoding = r.apparent_encoding or "utf-8"
         
-        # Second attempt: If Cloudscraper is detected (403), fallback to standard requests
         if r.status_code == 403:
-            r = requests.get(url, headers=headers, timeout=20, allow_redirects=True)
-            r.encoding = r.apparent_encoding or "utf-8"
-
-        if r.status_code != 200:
-            raise Exception(f"Trang web trả về lỗi {r.status_code}. Trang có thể đang chặn truy cập tự động.")
+            raise Exception("Trang web trả về lỗi 403. Website đang chặn IP của bạn.")
+        elif r.status_code != 200:
+            raise Exception(f"Trang web trả về lỗi {r.status_code}.")
             
         return BeautifulSoup(r.text, "lxml")
         
@@ -122,7 +111,6 @@ def get_content(url):
                and not re.search(r"(推荐|收藏|书签|书架|上一章|下一章|目录|返回|广告|加入书签|手机阅读|最新章节|本站|www\.|\.com|\.net|http)", l.strip())]
     return "\n\n".join(cleaned)
 
-# 3. Updated Translate logic with API limits fixing (Wait & Retry)
 def translate(text, glossary="", custom_prompt=""):
     client = genai.Client(api_key=GEMINI_KEY)
     max_chunk = 3000
@@ -159,15 +147,13 @@ Yêu cầu:
             resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
             results.append(resp.text)
             
-            # Wait 4.5 seconds to prevent rate limits
             if i < len(chunks) - 1: 
                 time.sleep(4.5)
                 
-            i += 1  # Move to next chunk only on success
+            i += 1 
 
         except Exception as e:
             error_message = str(e)
-            # Auto Retry if limit hit
             if '429' in error_message or 'RESOURCE_EXHAUSTED' in error_message:
                 print(f"[Lỗi chunk {i+1}] Quá giới hạn API (429). Đang đợi 30 giây để thử lại...")
                 time.sleep(30)
