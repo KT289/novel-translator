@@ -108,7 +108,11 @@ def translate(text, glossary="", custom_prompt=""):
     gp = f"\nBảng thuật ngữ:\n{glossary}\n" if glossary.strip() else ""
     tone = custom_prompt.strip() if custom_prompt.strip() else "Giữ nguyên ý nghĩa, giọng văn và phong cách văn học"
     results = []
-    for i, chunk in enumerate(chunks):
+    
+    # --- UPDATED LOGIC HERE ---
+    i = 0
+    while i < len(chunks):
+        chunk = chunks[i]
         prompt = f"""Bạn là dịch giả tiểu thuyết Trung Quốc chuyên nghiệp.
 Dịch đoạn văn sau từ tiếng Trung sang tiếng Việt.
 
@@ -122,9 +126,26 @@ Yêu cầu:
         try:
             resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
             results.append(resp.text)
+            
+            # Wait 4.5 seconds to prevent rate limits
+            if i < len(chunks) - 1: 
+                time.sleep(4.5)
+                
+            i += 1  # Move to next chunk only on success
+
         except Exception as e:
-            results.append(f"[Lỗi chunk {i+1}: {e}]")
-        if i < len(chunks) - 1: time.sleep(1)
+            error_message = str(e)
+            # If Google blocks us due to limit (429), pause for 30 seconds and retry
+            if '429' in error_message or 'RESOURCE_EXHAUSTED' in error_message:
+                print(f"[Lỗi chunk {i+1}] Quá giới hạn API (429). Đang đợi 30 giây để thử lại...")
+                time.sleep(30)
+                # Notice we do NOT increment `i` here, so it retries this exact chunk!
+            else:
+                # If it's a completely different error (e.g. safety filter, invalid text), skip chunk
+                print(f"[Lỗi chunk {i+1}]: {error_message}")
+                results.append(f"[Lỗi dịch chunk {i+1}: {error_message}]")
+                i += 1
+                
     return "\n\n".join(results)
 
 @app.route("/")
