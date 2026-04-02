@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, jsonify
 from google import genai
 
-# NEW: Import the ultimate Cloudflare bypasser
+# Import the Cloudflare bypasser
 from curl_cffi import requests as cffi_requests
 
 app = Flask(__name__)
@@ -37,7 +37,7 @@ def fetch(url):
     }
     
     try:
-        # impersonate="chrome" perfectly mimics a real browser's internal signatures
+        # impersonate="chrome" perfectly mimics a real browser to bypass Cloudflare
         r = cffi_requests.get(
             url, 
             headers=headers, 
@@ -45,14 +45,15 @@ def fetch(url):
             timeout=20, 
             allow_redirects=True
         )
-        r.encoding = r.apparent_encoding or "utf-8"
         
         if r.status_code == 403:
-            raise Exception("Trang web trả về lỗi 403. Website đang chặn IP của bạn.")
+            raise Exception("Trang web trả về lỗi 403. Website đang chặn IP máy chủ của bạn.")
         elif r.status_code != 200:
             raise Exception(f"Trang web trả về lỗi {r.status_code}.")
             
-        return BeautifulSoup(r.text, "lxml")
+        # Use r.content (raw bytes) instead of r.text. 
+        # BeautifulSoup automatically detects Chinese encoding (GBK/UTF-8) perfectly.
+        return BeautifulSoup(r.content, "lxml")
         
     except Exception as e:
          raise Exception(f"Không thể kết nối đến web: {str(e)}")
@@ -147,6 +148,7 @@ Yêu cầu:
             resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
             results.append(resp.text)
             
+            # Delay to prevent Gemini free tier limits (Max 15 requests/min)
             if i < len(chunks) - 1: 
                 time.sleep(4.5)
                 
