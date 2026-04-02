@@ -4,126 +4,537 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Novel Translator</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@200;300;400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Be+Vietnam+Pro:wght@300;400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0c0a07;--surface:#141210;--surface2:#1c1914;--surface3:#252119;
-  --gold:#c9a461;--gold-b:#dbb978;--gold-d:#8a7340;--gold-g:#c9a46115;--gold-gl:#c9a46130;
-  --text:#e8e2d6;--text2:#9a9286;--text3:#5e584e;--rule:#2a2520;
-  --red:#c07050;--green:#8aaa70;
-  /* reader overrides */
-  --r-bg:var(--bg);--r-text:var(--text);--r-font:'Cormorant Garamond',serif;--r-size:19px;--r-lh:2.15;
+:root {
+  --bg: #FFFBF7;
+  --surface: #FFF8F2;
+  --surface2: #FFF3EB;
+  --surface3: #FFEDE2;
+  --accent: #D4856A;
+  --accent-light: #E8A690;
+  --accent-dark: #B8694F;
+  --accent-bg: #D4856A0C;
+  --accent-bg2: #D4856A18;
+  --text: #3D2E26;
+  --text2: #7A6A60;
+  --text3: #B0A098;
+  --rule: #F0E6DE;
+  --rule2: #E8DCD2;
+  --green: #7AA672;
+  --red: #C07050;
+  --shadow: 0 1px 3px rgba(60,40,30,0.04);
+  --shadow2: 0 4px 20px rgba(60,40,30,0.06);
+  /* reader */
+  --r-bg: #FFFBF7;
+  --r-text: #3D2E26;
+  --r-font: 'Crimson Pro', serif;
+  --r-size: 19px;
+  --r-lh: 2.05;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-html{font-size:16px;-webkit-font-smoothing:antialiased}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
 
-/* ══════════ LANDING SCREEN ══════════ */
-#landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;position:relative;overflow:hidden}
-#landing::before{content:'';position:absolute;top:-20%;right:-15%;width:500px;height:500px;background:radial-gradient(circle,var(--gold-g) 0%,transparent 70%);pointer-events:none}
-#landing::after{content:'';position:absolute;bottom:-10%;left:-10%;width:350px;height:350px;background:radial-gradient(circle,#c9a46108 0%,transparent 70%);pointer-events:none}
-.l-logo{width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--gold-d);box-shadow:0 0 40px var(--gold-g);margin-bottom:20px;position:relative;z-index:1}
-.l-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);letter-spacing:2px;margin-bottom:4px;position:relative;z-index:1}
-.l-sub{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--text3);margin-bottom:36px;position:relative;z-index:1}
-.l-input-row{display:flex;gap:10px;width:100%;max-width:520px;position:relative;z-index:1}
-.l-input{flex:1;padding:14px 20px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:all .3s}
-.l-input:focus{border-color:var(--gold-d);box-shadow:0 0 0 3px var(--gold-g)}
-.l-input::placeholder{color:var(--text3)}
-.l-btn{padding:0 30px;background:linear-gradient(135deg,var(--gold),var(--gold-d));color:var(--bg);border:none;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:1px;text-transform:uppercase;transition:all .2s;white-space:nowrap}
-.l-btn:hover{filter:brightness(1.15);box-shadow:0 4px 24px var(--gold-gl)}
-.l-btn:disabled{opacity:.35;cursor:default;filter:none;box-shadow:none}
-.l-history{margin-top:28px;width:100%;max-width:520px;position:relative;z-index:1}
-.l-history-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
-.l-hist-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .2s}
-.l-hist-item:hover{border-color:var(--gold-d);background:var(--surface2)}
-.l-hist-dot{width:6px;height:6px;border-radius:50%;background:var(--gold-d);flex-shrink:0}
-.l-hist-text{flex:1;overflow:hidden}
-.l-hist-url{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.l-hist-ch{font-size:10px;color:var(--text3);margin-top:2px}
-.l-hist-del{background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:4px;opacity:.5;transition:opacity .2s}
-.l-hist-del:hover{opacity:1;color:var(--red)}
-.l-status{margin-top:16px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);position:relative;z-index:1}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ══════════ LANDING ══════════ */
+#landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: relative;
+}
+/* Soft radial background glow */
+#landing::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #FFDDC820 0%, transparent 70%);
+  pointer-events: none;
+}
+#landing::after {
+  content: '';
+  position: absolute;
+  bottom: -5%;
+  left: -5%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #D4856A08 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.l-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--rule2);
+  box-shadow: 0 4px 24px rgba(212,133,106,0.12);
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+.l-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+.l-sub {
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 40px;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
+
+.l-input-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+  z-index: 1;
+}
+.l-input {
+  flex: 1;
+  padding: 15px 20px;
+  background: #fff;
+  border: 1.5px solid var(--rule2);
+  border-radius: 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  transition: all 0.3s;
+  box-shadow: var(--shadow);
+}
+.l-input:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 4px var(--accent-bg2);
+}
+.l-input::placeholder { color: var(--text3); }
+
+.l-btn {
+  padding: 0 28px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  transition: all 0.25s;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(212,133,106,0.25);
+}
+.l-btn:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 4px 20px rgba(212,133,106,0.35);
+  transform: translateY(-1px);
+}
+.l-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+/* ── Style Picker on Landing ── */
+.l-styles {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+  z-index: 1;
+}
+.l-styles-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.l-styles-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.style-chip {
+  padding: 8px 18px;
+  background: #fff;
+  border: 1.5px solid var(--rule2);
+  border-radius: 24px;
+  font-size: 12.5px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.25s;
+  font-weight: 400;
+}
+.style-chip:hover {
+  border-color: var(--accent-light);
+  color: var(--accent-dark);
+  background: var(--surface2);
+}
+.style-chip.active {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+  background: var(--accent-bg2);
+  font-weight: 500;
+}
+
+/* ── Status & History ── */
+.l-status {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text2);
+  position: relative;
+  z-index: 1;
+}
+
+.l-history {
+  margin-top: 32px;
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+  z-index: 1;
+}
+.l-history-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+.l-hist-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+.l-hist-item:hover {
+  border-color: var(--accent-light);
+  box-shadow: var(--shadow2);
+}
+.l-hist-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  flex-shrink: 0;
+}
+.l-hist-text { flex: 1; overflow: hidden; }
+.l-hist-url {
+  font-size: 12px; color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.l-hist-ch { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.l-hist-del {
+  background: none; border: none; color: var(--text3);
+  font-size: 14px; cursor: pointer; padding: 4px;
+  opacity: 0.4; transition: opacity 0.2s;
+}
+.l-hist-del:hover { opacity: 1; color: var(--red); }
+
 
 /* ══════════ READER SCREEN ══════════ */
-#readerScreen{display:none;min-height:100vh;flex-direction:column}
+#readerScreen { display: none; min-height: 100vh; flex-direction: column; }
 
 /* Top bar */
-.topbar{padding:10px 20px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:12px;background:var(--surface);position:sticky;top:0;z-index:50}
-.tb-logo{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--gold-d);cursor:pointer}
-.tb-title{flex:1;font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tb-btn{background:none;border:1px solid var(--rule);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:16px;transition:all .2s}
-.tb-btn:hover{border-color:var(--gold-d);color:var(--gold)}
+.topbar {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 8px rgba(60,40,30,0.03);
+}
+.tb-logo {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--rule2);
+  cursor: pointer;
+}
+.tb-title {
+  flex: 1;
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 400;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tb-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.tb-btn:hover { border-color: var(--accent-light); color: var(--accent); }
 
 /* Chapters panel */
-.ch-panel{border-bottom:1px solid var(--rule);display:none}
-.ch-panel.open{display:block}
-.ch-head{padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--rule);font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
-.ch-list{max-height:45vh;overflow-y:auto}
-.ch-item{padding:10px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid #1a1816;transition:background .15s}
-.ch-item:hover{background:var(--surface)}
-.ch-item.active{background:var(--surface2);border-left:3px solid var(--gold);padding-left:17px}
-.ch-num{font-size:11px;color:var(--text3);width:26px;text-align:right;flex-shrink:0}
-.ch-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--rule);transition:background .3s}
-.ch-dot.done{background:var(--green)}.ch-dot.busy{background:var(--gold);animation:pulse 1s infinite}
-.ch-title{font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.ch-ok{font-size:9px;color:var(--green);flex-shrink:0;opacity:.7}
+.ch-panel { border-bottom: 1px solid var(--rule); display: none; }
+.ch-panel.open { display: block; animation: fadeUp 0.2s; }
+.ch-head {
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  font-size: 10px; color: var(--text3);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.ch-list { max-height: 45vh; overflow-y: auto; background: #fff; }
+.ch-item {
+  padding: 11px 20px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+  transition: background 0.15s;
+}
+.ch-item:hover { background: var(--surface); }
+.ch-item.active {
+  background: var(--surface2);
+  border-left: 3px solid var(--accent);
+  padding-left: 17px;
+}
+.ch-num { font-size: 11px; color: var(--text3); width: 28px; text-align: right; flex-shrink: 0; }
+.ch-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0; background: var(--rule2);
+  transition: background 0.3s;
+}
+.ch-dot.done { background: var(--green); }
+.ch-dot.busy { background: var(--accent); animation: pulse 1s infinite; }
+.ch-title {
+  font-size: 13px; color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.ch-ok { font-size: 9px; color: var(--green); flex-shrink: 0; }
 
 /* Settings drawer */
-.settings-drawer{border-bottom:1px solid var(--rule);background:var(--surface);display:none;padding:16px 20px}
-.settings-drawer.open{display:block;animation:fadeUp .25s}
-.s-section{margin-bottom:14px}
-.s-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-.s-row{display:flex;gap:6px;flex-wrap:wrap}
-.s-chip{padding:5px 12px;background:var(--surface2);border:1px solid var(--rule);border-radius:20px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
-.s-chip:hover{border-color:var(--gold-d);color:var(--gold)}
-.s-chip.active{border-color:var(--gold);color:var(--gold);background:var(--gold-g)}
-.s-color{width:32px;height:32px;border-radius:50%;border:2px solid var(--rule);cursor:pointer;transition:all .2s}
-.s-color:hover,.s-color.active{border-color:var(--gold);box-shadow:0 0 10px var(--gold-g)}
-.s-slider-row{display:flex;align-items:center;gap:12px}
-.s-slider{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--rule);border-radius:2px;outline:none}
-.s-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--gold);cursor:pointer;border:none}
-.s-val{font-size:12px;color:var(--text2);width:32px;text-align:right}
-.s-textarea{width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--rule);border-radius:8px;font-size:12px;color:var(--text);outline:none;resize:vertical;min-height:60px;line-height:1.7;font-family:inherit;transition:all .3s}
-.s-textarea:focus{border-color:var(--gold-d);box-shadow:0 0 0 3px var(--gold-g)}
-.s-textarea::placeholder{color:var(--text3)}
-.s-foot{font-size:10px;color:var(--text3);margin-top:4px;display:flex;justify-content:space-between}
-.s-link{background:none;border:none;color:var(--gold-d);font-size:10px;cursor:pointer;font-family:inherit;opacity:.7}
-.s-link:hover{opacity:1}
+.settings-drawer {
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+  display: none;
+  padding: 18px 20px;
+}
+.settings-drawer.open { display: block; animation: fadeUp 0.2s; }
+.s-section { margin-bottom: 16px; }
+.s-label {
+  font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--text3);
+  margin-bottom: 8px;
+}
+.s-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.s-chip {
+  padding: 6px 14px;
+  background: #fff;
+  border: 1px solid var(--rule2);
+  border-radius: 22px;
+  font-size: 11.5px; color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.s-chip:hover { border-color: var(--accent-light); color: var(--accent); }
+.s-chip.active { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-bg2); }
+
+.s-color {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--rule2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.s-color:hover, .s-color.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-bg2);
+}
+.s-slider-row { display: flex; align-items: center; gap: 12px; }
+.s-slider {
+  flex: 1;
+  -webkit-appearance: none; appearance: none;
+  height: 3px; background: var(--rule2);
+  border-radius: 2px; outline: none;
+}
+.s-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer; border: none;
+  box-shadow: 0 1px 4px rgba(212,133,106,0.3);
+}
+.s-val { font-size: 12px; color: var(--text2); width: 32px; text-align: right; }
+
+.s-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid var(--rule2);
+  border-radius: 10px;
+  font-size: 12px; color: var(--text);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.7;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+.s-textarea:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px var(--accent-bg); }
+.s-textarea::placeholder { color: var(--text3); }
+.s-foot { font-size: 10px; color: var(--text3); margin-top: 5px; display: flex; justify-content: space-between; }
+.s-link {
+  background: none; border: none; color: var(--accent);
+  font-size: 10px; cursor: pointer; font-family: inherit; opacity: 0.7;
+}
+.s-link:hover { opacity: 1; }
 
 /* Chapter nav */
-.ch-nav{padding:10px 20px;border-bottom:1px solid var(--rule);display:none;justify-content:space-between;align-items:center}
-.ch-nav.open{display:flex}
-.nav-btn{padding:7px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;font-size:12px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
-.nav-btn:hover:not(:disabled){border-color:var(--gold-d);color:var(--gold)}
-.nav-btn:disabled{color:var(--text3);opacity:.3;cursor:default}
-.nav-title{font-size:13px;color:var(--gold-d);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%;text-align:center;font-family:'Cormorant Garamond',serif}
+.ch-nav {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+  display: none;
+  justify-content: space-between; align-items: center;
+  background: #fff;
+}
+.ch-nav.open { display: flex; }
+.nav-btn {
+  padding: 8px 18px;
+  background: #fff;
+  border: 1px solid var(--rule2);
+  border-radius: 10px;
+  font-size: 12px; color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.nav-btn:hover:not(:disabled) { border-color: var(--accent-light); color: var(--accent); }
+.nav-btn:disabled { color: var(--text3); opacity: 0.3; cursor: default; }
+.nav-title {
+  font-size: 13px; color: var(--accent-dark);
+  font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 45%; text-align: center;
+  font-family: 'Playfair Display', serif;
+}
 
 /* Status */
-.status-bar{padding:12px 20px;border-bottom:1px solid var(--rule);display:none;align-items:center;gap:10px;background:var(--surface)}
-.status-bar.on{display:flex}
-.spinner{width:13px;height:13px;border:1.5px solid var(--rule);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-.status-text{font-size:13px;color:var(--text2)}
-.error-bar{padding:12px 20px;border-bottom:1px solid #3a2520;background:#1a1210;font-size:13px;color:var(--red);display:none}
-.error-bar.on{display:block}
+.status-bar {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule);
+  display: none; align-items: center; gap: 10px;
+  background: var(--surface);
+}
+.status-bar.on { display: flex; }
+.spinner {
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--rule2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.status-text { font-size: 13px; color: var(--text2); }
+.error-bar {
+  padding: 12px 20px;
+  border-bottom: 1px solid #F0D0C8;
+  background: #FFF5F2;
+  font-size: 13px; color: var(--red); display: none;
+}
+.error-bar.on { display: block; }
 
 /* Reader area */
-.reader-area{flex:1;padding:44px 24px 100px;background:var(--r-bg);transition:background .3s}
-.reader-body{max-width:640px;margin:0 auto;font-family:var(--r-font);font-size:var(--r-size);line-height:var(--r-lh);color:var(--r-text);font-weight:300;transition:all .3s}
-.reader-body p{margin-bottom:.9em;text-indent:2em}
-.next-btn{display:block;margin:50px auto 0;padding:13px 36px;background:transparent;border:1px solid var(--rule);border-radius:10px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .3s;letter-spacing:.5px}
-.next-btn:hover{border-color:var(--gold-d);color:var(--gold)}
-.reader-empty{display:flex;align-items:center;justify-content:center;min-height:40vh;text-align:center;color:var(--text3);font-size:13px}
+.reader-area {
+  flex: 1;
+  padding: 48px 24px 100px;
+  background: var(--r-bg);
+  transition: background 0.3s;
+}
+.reader-body {
+  max-width: 660px;
+  margin: 0 auto;
+  font-family: var(--r-font);
+  font-size: var(--r-size);
+  line-height: var(--r-lh);
+  color: var(--r-text);
+  font-weight: 300;
+  transition: all 0.3s;
+}
+.reader-body p { margin-bottom: 0.9em; text-indent: 2em; }
+.next-btn {
+  display: block;
+  margin: 50px auto 0;
+  padding: 13px 36px;
+  background: transparent;
+  border: 1px solid var(--rule2);
+  border-radius: 12px;
+  font-size: 12px; color: var(--text2);
+  cursor: pointer;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+.next-btn:hover { border-color: var(--accent); color: var(--accent); }
+.reader-empty {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 40vh; text-align: center; color: var(--text3); font-size: 13px;
+}
 
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+/* Keyframes */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-@media(min-width:768px){
-  .topbar,.ch-head,.ch-nav,.status-bar,.error-bar,.settings-drawer{padding-left:40px;padding-right:40px}
-  .ch-item{padding-left:40px;padding-right:40px}.ch-item.active{padding-left:37px}
-  .reader-area{padding:56px 48px 120px}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Desktop */
+@media (min-width: 768px) {
+  .topbar, .ch-head, .ch-nav, .status-bar, .error-bar, .settings-drawer {
+    padding-left: 40px; padding-right: 40px;
+  }
+  .ch-item { padding-left: 40px; padding-right: 40px; }
+  .ch-item.active { padding-left: 37px; }
+  .reader-area { padding: 60px 48px 120px; }
 }
 </style>
 </head>
@@ -134,13 +545,30 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
   <img src="/static/logo.jpeg" class="l-logo" alt="">
   <div class="l-title">Novel Translator</div>
   <div class="l-sub">Trung → Việt · AI Dịch Thuật</div>
+
   <div class="l-input-row">
-    <input class="l-input" id="landingUrl" placeholder="Dán URL mục lục hoặc chương..." onkeydown="if(event.key==='Enter')startNovel()">
+    <input class="l-input" id="landingUrl"
+           placeholder="Dán URL mục lục (hetushu, 69shuba, piaotia)..."
+           onkeydown="if(event.key==='Enter')startNovel()">
     <button class="l-btn" id="landingBtn" onclick="startNovel()">Đọc</button>
   </div>
+
+  <!-- Style picker on landing -->
+  <div class="l-styles">
+    <div class="l-styles-label">Phong cách dịch</div>
+    <div class="l-styles-row">
+      <button class="style-chip active" data-style="nguyenban" onclick="pickStyle(this)">Nguyên bản</button>
+      <button class="style-chip" data-style="cotrang" onclick="pickStyle(this)">Cổ trang</button>
+      <button class="style-chip" data-style="hiendai" onclick="pickStyle(this)">Hiện đại</button>
+      <button class="style-chip" data-style="langman" onclick="pickStyle(this)">Lãng mạn</button>
+      <button class="style-chip" data-style="satnghia" onclick="pickStyle(this)">Sát nghĩa</button>
+    </div>
+  </div>
+
   <div class="l-status" id="landingStatus" style="display:none">
     <div class="spinner"></div><span id="landingStatusText"></span>
   </div>
+
   <div class="l-history" id="historySection" style="display:none">
     <div class="l-history-title">Đọc gần đây</div>
     <div id="historyList"></div>
@@ -165,15 +593,26 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
 
   <!-- Settings -->
   <div class="settings-drawer" id="settingsDrawer">
+    <!-- Style (also in settings for changing mid-read) -->
+    <div class="s-section">
+      <div class="s-label">Phong cách dịch</div>
+      <div class="s-row" id="readerStylePicker">
+        <button class="s-chip active" data-style="nguyenban" onclick="pickReaderStyle(this)">Nguyên bản</button>
+        <button class="s-chip" data-style="cotrang" onclick="pickReaderStyle(this)">Cổ trang</button>
+        <button class="s-chip" data-style="hiendai" onclick="pickReaderStyle(this)">Hiện đại</button>
+        <button class="s-chip" data-style="langman" onclick="pickReaderStyle(this)">Lãng mạn</button>
+        <button class="s-chip" data-style="satnghia" onclick="pickReaderStyle(this)">Sát nghĩa</button>
+      </div>
+    </div>
     <!-- Font -->
     <div class="s-section">
       <div class="s-label">Phông chữ</div>
       <div class="s-row" id="fontPicker">
-        <button class="s-chip active" data-font="'Cormorant Garamond',serif" onclick="setFont(this)">Garamond</button>
+        <button class="s-chip active" data-font="'Crimson Pro',serif" onclick="setFont(this)">Crimson</button>
         <button class="s-chip" data-font="'Noto Serif',serif" onclick="setFont(this)">Noto Serif</button>
         <button class="s-chip" data-font="'Lora',serif" onclick="setFont(this)">Lora</button>
-        <button class="s-chip" data-font="'Source Sans 3',sans-serif" onclick="setFont(this)">Source Sans</button>
-        <button class="s-chip" data-font="'Outfit',sans-serif" onclick="setFont(this)">Outfit</button>
+        <button class="s-chip" data-font="'Source Serif 4',serif" onclick="setFont(this)">Source Serif</button>
+        <button class="s-chip" data-font="'Be Vietnam Pro',sans-serif" onclick="setFont(this)">Be Vietnam</button>
       </div>
     </div>
     <!-- Size -->
@@ -188,38 +627,31 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
     <div class="s-section">
       <div class="s-label">Khoảng cách dòng</div>
       <div class="s-slider-row">
-        <input type="range" class="s-slider" id="lhSlider" min="150" max="300" value="215" step="5" oninput="setLh(this.value)">
-        <span class="s-val" id="lhVal">2.15</span>
+        <input type="range" class="s-slider" id="lhSlider" min="150" max="300" value="205" step="5" oninput="setLh(this.value)">
+        <span class="s-val" id="lhVal">2.05</span>
       </div>
     </div>
     <!-- Theme colors -->
     <div class="s-section">
       <div class="s-label">Giao diện đọc</div>
       <div class="s-row" style="gap:10px">
-        <button class="s-color active" style="background:#0c0a07" data-bg="#0c0a07" data-text="#e8e2d6" onclick="setTheme(this)" title="Tối"></button>
+        <button class="s-color active" style="background:#FFFBF7" data-bg="#FFFBF7" data-text="#3D2E26" onclick="setTheme(this)" title="Sáng"></button>
+        <button class="s-color" style="background:#F5EDD6" data-bg="#F5EDD6" data-text="#3A3020" onclick="setTheme(this)" title="Giấy cũ"></button>
+        <button class="s-color" style="background:#E8F0E8" data-bg="#E8F0E8" data-text="#2A3028" onclick="setTheme(this)" title="Xanh lá"></button>
+        <button class="s-color" style="background:#1C1814" data-bg="#1C1814" data-text="#D4CDC4" onclick="setTheme(this)" title="Nâu tối"></button>
+        <button class="s-color" style="background:#0c0a07" data-bg="#0c0a07" data-text="#e8e2d6" onclick="setTheme(this)" title="Đen"></button>
         <button class="s-color" style="background:#1a1a2e" data-bg="#1a1a2e" data-text="#d0d0e0" onclick="setTheme(this)" title="Xanh đêm"></button>
-        <button class="s-color" style="background:#1c1814" data-bg="#1c1814" data-text="#d4cdc4" onclick="setTheme(this)" title="Nâu ấm"></button>
-        <button class="s-color" style="background:#f8f4ee" data-bg="#f8f4ee" data-text="#3a3630" onclick="setTheme(this)" title="Sáng"></button>
-        <button class="s-color" style="background:#f5edd6" data-bg="#f5edd6" data-text="#3a3020" onclick="setTheme(this)" title="Giấy cũ"></button>
-        <button class="s-color" style="background:#d4e4d4" data-bg="#d4e4d4" data-text="#2a3028" onclick="setTheme(this)" title="Xanh lá"></button>
       </div>
     </div>
-    <!-- Prompt -->
+    <!-- Custom prompt -->
     <div class="s-section">
-      <div class="s-label">Prompt dịch</div>
-      <textarea class="s-textarea" id="customPrompt" placeholder="Ví dụ: Dịch theo phong cách cổ trang, ngôn ngữ trang trọng..."></textarea>
-      <div class="s-row" style="margin-top:6px">
-        <button class="s-chip" onclick="setP('Giữ nguyên ý nghĩa, giọng văn và phong cách văn học gốc')">Nguyên bản</button>
-        <button class="s-chip" onclick="setP('Dịch theo phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiểu kiếm hiệp')">Cổ trang</button>
-        <button class="s-chip" onclick="setP('Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi')">Hiện đại</button>
-        <button class="s-chip" onclick="setP('Dịch sát nghĩa, chính xác từng câu')">Sát nghĩa</button>
-        <button class="s-chip" onclick="setP('Dịch văn phong lãng mạn, trữ tình, giàu cảm xúc')">Lãng mạn</button>
-      </div>
+      <div class="s-label">Prompt tuỳ chỉnh (ghi đè phong cách)</div>
+      <textarea class="s-textarea" id="customPrompt" placeholder="Để trống nếu muốn dùng phong cách đã chọn ở trên..."></textarea>
     </div>
     <!-- Glossary -->
     <div class="s-section">
       <div class="s-label">Thuật ngữ & Tên nhân vật</div>
-      <textarea class="s-textarea" id="glossary" placeholder="萧炎 = Tiêu Viêm&#10;斗气 = Đấu Khí"></textarea>
+      <textarea class="s-textarea" id="glossary" placeholder="萧炎 = Tiêu Viêm&#10;斗气 = Đấu Khí&#10;云岚宗 = Vân Lam Tông"></textarea>
       <div class="s-foot">
         <span>Áp dụng cho mọi bản dịch</span>
         <button class="s-link" onclick="clearTranslationCache()">Xóa cache dịch</button>
@@ -248,182 +680,251 @@ body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xm
 
 <script>
 /* ══════════ STATE ══════════ */
-let chapters=[], currentIdx=-1, translated={}, novelUrl='';
-const $=id=>document.getElementById(id);
-const LS=window.localStorage;
+let chapters = [], currentIdx = -1, translated = {}, novelUrl = '';
+let selectedStyle = 'nguyenban';
+const $ = id => document.getElementById(id);
+const LS = window.localStorage;
+
+/* ══════════ STYLE PICKER ══════════ */
+function pickStyle(el) {
+  document.querySelectorAll('.l-styles-row .style-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedStyle = el.dataset.style;
+  // Sync reader settings panel
+  document.querySelectorAll('#readerStylePicker .s-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.style === selectedStyle);
+  });
+  saveSettings();
+}
+function pickReaderStyle(el) {
+  document.querySelectorAll('#readerStylePicker .s-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedStyle = el.dataset.style;
+  // Sync landing page
+  document.querySelectorAll('.l-styles-row .style-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.style === selectedStyle);
+  });
+  saveSettings();
+}
 
 /* ══════════ PERSISTENCE ══════════ */
-function saveProgress(){
-  if(!novelUrl)return;
-  const hist=getHistory();
-  const existing=hist.findIndex(h=>h.url===novelUrl);
-  const entry={url:novelUrl,chapter:currentIdx,title:chapters[currentIdx]?.title||'',time:Date.now()};
-  if(existing>=0)hist[existing]=entry; else hist.unshift(entry);
-  LS.setItem('novel_history',JSON.stringify(hist.slice(0,10)));
+function saveProgress() {
+  if (!novelUrl) return;
+  const hist = getHistory();
+  const existing = hist.findIndex(h => h.url === novelUrl);
+  const entry = { url: novelUrl, chapter: currentIdx, title: chapters[currentIdx]?.title || '', time: Date.now() };
+  if (existing >= 0) hist[existing] = entry; else hist.unshift(entry);
+  LS.setItem('novel_history', JSON.stringify(hist.slice(0, 10)));
 }
-function getHistory(){try{return JSON.parse(LS.getItem('novel_history')||'[]')}catch{return[]}}
-function saveSettings(){
-  LS.setItem('novel_settings',JSON.stringify({
-    font:getComputedStyle(document.documentElement).getPropertyValue('--r-font').trim(),
-    size:$('sizeSlider').value,
-    lh:$('lhSlider').value,
-    bg:getComputedStyle(document.documentElement).getPropertyValue('--r-bg').trim(),
-    text:getComputedStyle(document.documentElement).getPropertyValue('--r-text').trim(),
-    glossary:$('glossary').value,
-    prompt:$('customPrompt').value,
+function getHistory() { try { return JSON.parse(LS.getItem('novel_history') || '[]'); } catch { return []; } }
+
+function saveSettings() {
+  LS.setItem('novel_settings', JSON.stringify({
+    font: getComputedStyle(document.documentElement).getPropertyValue('--r-font').trim(),
+    size: $('sizeSlider').value,
+    lh: $('lhSlider').value,
+    bg: getComputedStyle(document.documentElement).getPropertyValue('--r-bg').trim(),
+    text: getComputedStyle(document.documentElement).getPropertyValue('--r-text').trim(),
+    glossary: $('glossary').value,
+    prompt: $('customPrompt').value,
+    style: selectedStyle,
   }));
 }
-function loadSettings(){
-  try{
-    const s=JSON.parse(LS.getItem('novel_settings'));
-    if(!s)return;
-    if(s.font){document.documentElement.style.setProperty('--r-font',s.font);
-      document.querySelectorAll('#fontPicker .s-chip').forEach(c=>{c.classList.toggle('active',c.dataset.font===s.font)})}
-    if(s.size){$('sizeSlider').value=s.size;setSize(s.size)}
-    if(s.lh){$('lhSlider').value=s.lh;setLh(s.lh)}
-    if(s.bg){document.documentElement.style.setProperty('--r-bg',s.bg);document.documentElement.style.setProperty('--r-text',s.text);
-      document.querySelectorAll('.s-color').forEach(c=>{c.classList.toggle('active',c.dataset.bg===s.bg)})}
-    if(s.glossary)$('glossary').value=s.glossary;
-    if(s.prompt)$('customPrompt').value=s.prompt;
-  }catch{}
+function loadSettings() {
+  try {
+    const s = JSON.parse(LS.getItem('novel_settings'));
+    if (!s) return;
+    if (s.font) {
+      document.documentElement.style.setProperty('--r-font', s.font);
+      document.querySelectorAll('#fontPicker .s-chip').forEach(c => c.classList.toggle('active', c.dataset.font === s.font));
+    }
+    if (s.size) { $('sizeSlider').value = s.size; setSize(s.size); }
+    if (s.lh) { $('lhSlider').value = s.lh; setLh(s.lh); }
+    if (s.bg) {
+      document.documentElement.style.setProperty('--r-bg', s.bg);
+      document.documentElement.style.setProperty('--r-text', s.text);
+      document.querySelectorAll('.s-color').forEach(c => c.classList.toggle('active', c.dataset.bg === s.bg));
+    }
+    if (s.glossary) $('glossary').value = s.glossary;
+    if (s.prompt) $('customPrompt').value = s.prompt;
+    if (s.style) {
+      selectedStyle = s.style;
+      document.querySelectorAll('.style-chip, #readerStylePicker .s-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.style === selectedStyle);
+      });
+    }
+  } catch {}
 }
 
 /* ══════════ LANDING ══════════ */
-function renderHistory(){
-  const hist=getHistory();
-  if(!hist.length){$('historySection').style.display='none';return}
-  $('historySection').style.display='block';
-  $('historyList').innerHTML=hist.map((h,i)=>`<div class="l-hist-item" onclick="resumeNovel(${i})">
+function renderHistory() {
+  const hist = getHistory();
+  if (!hist.length) { $('historySection').style.display = 'none'; return; }
+  $('historySection').style.display = 'block';
+  $('historyList').innerHTML = hist.map((h, i) => `<div class="l-hist-item" onclick="resumeNovel(${i})">
     <span class="l-hist-dot"></span>
     <div class="l-hist-text">
       <div class="l-hist-url">${h.url}</div>
-      <div class="l-hist-ch">${h.title?'Ch.'+(h.chapter+1)+': '+h.title:'Chương '+(h.chapter+1)}</div>
+      <div class="l-hist-ch">${h.title ? 'Ch.' + (h.chapter + 1) + ': ' + h.title : 'Chương ' + (h.chapter + 1)}</div>
     </div>
     <button class="l-hist-del" onclick="event.stopPropagation();delHist(${i})" title="Xóa">✕</button>
   </div>`).join('');
 }
-function delHist(i){const h=getHistory();h.splice(i,1);LS.setItem('novel_history',JSON.stringify(h));renderHistory()}
-async function resumeNovel(i){
-  const h=getHistory()[i];
-  if(!h)return;
-  $('landingUrl').value=h.url;
+function delHist(i) { const h = getHistory(); h.splice(i, 1); LS.setItem('novel_history', JSON.stringify(h)); renderHistory(); }
+
+async function resumeNovel(i) {
+  const h = getHistory()[i];
+  if (!h) return;
+  $('landingUrl').value = h.url;
   await startNovel(h.chapter);
 }
 
 /* ══════════ START NOVEL ══════════ */
-async function startNovel(resumeIdx){
-  const url=$('landingUrl').value.trim();
-  if(!url)return;
-  novelUrl=url;
-  $('landingBtn').disabled=true;
-  $('landingStatus').style.display='flex';
-  $('landingStatusText').textContent='Đang tải mục lục...';
-  try{
-    const r=await fetch('/api/chapters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error);
-    chapters=d.chapters;translated={};
-    $('landing').style.display='none';
-    $('readerScreen').style.display='flex';
-    $('chCount').textContent=chapters.length+' chương';
-    $('tbTitle').textContent=url.replace(/https?:\/\/(www\.)?/,'').split('/').slice(0,2).join('/');
+async function startNovel(resumeIdx) {
+  const url = $('landingUrl').value.trim();
+  if (!url) return;
+  novelUrl = url;
+  $('landingBtn').disabled = true;
+  $('landingStatus').style.display = 'flex';
+  $('landingStatusText').textContent = 'Đang tải mục lục...';
+  try {
+    const r = await fetch('/api/chapters', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    chapters = d.chapters;
+    translated = {};
+    $('landing').style.display = 'none';
+    $('readerScreen').style.display = 'flex';
+    $('chCount').textContent = chapters.length + ' chương';
+    $('tbTitle').textContent = url.replace(/https?:\/\/(www\.)?/, '').split('/').slice(0, 2).join('/');
     renderCh();
-    if(typeof resumeIdx==='number'&&resumeIdx>=0&&resumeIdx<chapters.length){
+    if (typeof resumeIdx === 'number' && resumeIdx >= 0 && resumeIdx < chapters.length) {
       openCh(resumeIdx);
     }
-  }catch(e){
-    $('landingStatusText').textContent='❌ '+e.message;
-    $('landingStatus').querySelector('.spinner').style.display='none';
-    setTimeout(()=>{$('landingStatus').style.display='none';$('landingStatus').querySelector('.spinner').style.display='block'},8000);
-  }finally{$('landingBtn').disabled=false}
+  } catch (e) {
+    $('landingStatusText').textContent = '❌ ' + e.message;
+    $('landingStatus').querySelector('.spinner').style.display = 'none';
+    setTimeout(() => {
+      $('landingStatus').style.display = 'none';
+      $('landingStatus').querySelector('.spinner').style.display = 'block';
+    }, 6000);
+  } finally { $('landingBtn').disabled = false; }
 }
 
 /* ══════════ READER LOGIC ══════════ */
-function showStatus(m){$('statusBar').classList.add('on');$('statusText').textContent=m}
-function hideStatus(){$('statusBar').classList.remove('on')}
-function showError(m){$('errorBar').classList.add('on');$('errorBar').textContent=m}
-function hideError(){$('errorBar').classList.remove('on')}
+function showStatus(m) { $('statusBar').classList.add('on'); $('statusText').textContent = m; }
+function hideStatus() { $('statusBar').classList.remove('on'); }
+function showError(m) { $('errorBar').classList.add('on'); $('errorBar').textContent = m; }
+function hideError() { $('errorBar').classList.remove('on'); }
 
-function togglePanel(id){
-  const el=$(id),open=el.classList.contains('open');
-  document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open'));
-  if(!open)el.classList.add('open');
+function togglePanel(id) {
+  const el = $(id), open = el.classList.contains('open');
+  document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x => x.classList.remove('open'));
+  if (!open) el.classList.add('open');
 }
 
-function renderCh(){
-  $('chList').innerHTML=chapters.map((ch,i)=>`<div class="ch-item ${i===currentIdx?'active':''}" onclick="openCh(${i})">
-    <span class="ch-num">${i+1}</span>
-    <span class="ch-dot ${translated[i]?'done':i===currentIdx?'busy':''}" id="dot${i}"></span>
+function renderCh() {
+  $('chList').innerHTML = chapters.map((ch, i) => `<div class="ch-item ${i === currentIdx ? 'active' : ''}" onclick="openCh(${i})">
+    <span class="ch-num">${i + 1}</span>
+    <span class="ch-dot ${translated[i] ? 'done' : i === currentIdx ? 'busy' : ''}" id="dot${i}"></span>
     <span class="ch-title">${ch.title}</span>
-    ${translated[i]?'<span class="ch-ok">✓</span>':''}
+    ${translated[i] ? '<span class="ch-ok">✓</span>' : ''}
   </div>`).join('');
 }
 
-async function openCh(i){
-  currentIdx=i;renderCh();hideError();
+async function openCh(i) {
+  currentIdx = i;
+  renderCh();
+  hideError();
   $('chNav').classList.add('open');
-  $('navTitle').textContent=chapters[i].title;
-  $('prevBtn').disabled=i<=0;$('nextBtn').disabled=i>=chapters.length-1;
-  document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open'));
+  $('navTitle').textContent = chapters[i].title;
+  $('prevBtn').disabled = i <= 0;
+  $('nextBtn').disabled = i >= chapters.length - 1;
+  document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x => x.classList.remove('open'));
   saveProgress();
-  if(translated[i]){renderText(translated[i]);return}
-  $('readerBody').innerHTML='<div class="reader-empty" style="min-height:30vh">Đang dịch...</div>';
-  showStatus('Đang dịch: '+chapters[i].title);
-  const dot=$(`dot${i}`);if(dot)dot.className='ch-dot busy';
-  try{
-    const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:chapters[i].url,glossary:$('glossary').value,custom_prompt:$('customPrompt').value})});
-    const d=await r.json();hideStatus();
-    if(!r.ok){showError(d.error);if(dot)dot.className='ch-dot';return}
-    translated[i]=d.translation;if(dot)dot.className='ch-dot done';
-    renderText(d.translation);renderCh();
-  }catch(e){hideStatus();showError(e.message);if(dot)dot.className='ch-dot'}
+
+  if (translated[i]) { renderText(translated[i]); return; }
+
+  $('readerBody').innerHTML = '<div class="reader-empty" style="min-height:30vh">Đang dịch...</div>';
+  showStatus('Đang dịch: ' + chapters[i].title);
+  const dot = $(`dot${i}`);
+  if (dot) dot.className = 'ch-dot busy';
+
+  try {
+    const r = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: chapters[i].url,
+        glossary: $('glossary').value,
+        style: selectedStyle,
+        custom_prompt: $('customPrompt').value
+      })
+    });
+    const d = await r.json();
+    hideStatus();
+    if (!r.ok) { showError(d.error); if (dot) dot.className = 'ch-dot'; return; }
+    translated[i] = d.translation;
+    if (dot) dot.className = 'ch-dot done';
+    renderText(d.translation);
+    renderCh();
+  } catch (e) {
+    hideStatus();
+    showError(e.message);
+    if (dot) dot.className = 'ch-dot';
+  }
 }
 
-function renderText(text){
-  let html=text.split(/\n+/).filter(p=>p.trim()).map(p=>`<p>${p}</p>`).join('');
-  if(currentIdx>=0&&currentIdx<chapters.length-1)
-    html+=`<button class="next-btn" onclick="nav(1)">Chương tiếp theo →</button>`;
-  $('readerBody').innerHTML=html;
-  $('readerArea').scrollTop=0;
-  window.scrollTo({top:0,behavior:'smooth'});
+function renderText(text) {
+  let html = text.split(/\n+/).filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+  if (currentIdx >= 0 && currentIdx < chapters.length - 1)
+    html += `<button class="next-btn" onclick="nav(1)">Chương tiếp theo →</button>`;
+  $('readerBody').innerHTML = html;
+  $('readerArea').scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function nav(d){const n=currentIdx+d;if(n>=0&&n<chapters.length)openCh(n)}
-function goHome(){$('readerScreen').style.display='none';$('landing').style.display='flex';renderHistory()}
+function nav(d) { const n = currentIdx + d; if (n >= 0 && n < chapters.length) openCh(n); }
+function goHome() { $('readerScreen').style.display = 'none'; $('landing').style.display = 'flex'; renderHistory(); }
 
 /* ══════════ SETTINGS ══════════ */
-function setFont(el){
-  document.querySelectorAll('#fontPicker .s-chip').forEach(c=>c.classList.remove('active'));
+function setFont(el) {
+  document.querySelectorAll('#fontPicker .s-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  document.documentElement.style.setProperty('--r-font',el.dataset.font);
+  document.documentElement.style.setProperty('--r-font', el.dataset.font);
   saveSettings();
 }
-function setSize(v){
-  document.documentElement.style.setProperty('--r-size',v+'px');
-  $('sizeVal').textContent=v;saveSettings();
-}
-function setLh(v){
-  const lh=(v/100).toFixed(2);
-  document.documentElement.style.setProperty('--r-lh',lh);
-  $('lhVal').textContent=lh;saveSettings();
-}
-function setTheme(el){
-  document.querySelectorAll('.s-color').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  document.documentElement.style.setProperty('--r-bg',el.dataset.bg);
-  document.documentElement.style.setProperty('--r-text',el.dataset.text);
+function setSize(v) {
+  document.documentElement.style.setProperty('--r-size', v + 'px');
+  $('sizeVal').textContent = v;
   saveSettings();
 }
-function setP(t){$('customPrompt').value=t;saveSettings()}
-function clearTranslationCache(){translated={};renderCh()}
+function setLh(v) {
+  const lh = (v / 100).toFixed(2);
+  document.documentElement.style.setProperty('--r-lh', lh);
+  $('lhVal').textContent = lh;
+  saveSettings();
+}
+function setTheme(el) {
+  document.querySelectorAll('.s-color').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.documentElement.style.setProperty('--r-bg', el.dataset.bg);
+  document.documentElement.style.setProperty('--r-text', el.dataset.text);
+  saveSettings();
+}
+function clearTranslationCache() { translated = {}; renderCh(); }
 
-$('glossary')?.addEventListener('input',saveSettings);
-$('customPrompt')?.addEventListener('input',saveSettings);
+$('glossary')?.addEventListener('input', saveSettings);
+$('customPrompt')?.addEventListener('input', saveSettings);
 
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-  if(e.key==='ArrowLeft')nav(-1);if(e.key==='ArrowRight')nav(1);
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowLeft') nav(-1);
+  if (e.key === 'ArrowRight') nav(1);
 });
 
 /* ══════════ INIT ══════════ */
