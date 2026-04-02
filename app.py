@@ -13,9 +13,21 @@ CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
 
 HDR = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Accept-Language": "zh-CN,zh;q=0.9",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "max-age=0",
 }
+
+session = requests.Session()
+session.headers.update(HDR)
 
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
@@ -31,8 +43,15 @@ def set_cache(url, data):
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
 def fetch(url):
-    r = requests.get(url, headers=HDR, timeout=20)
+    r = session.get(url, timeout=20, allow_redirects=True)
     r.encoding = r.apparent_encoding or "utf-8"
+    if r.status_code == 403:
+        # Retry with different referer
+        retry_hdr = {**HDR, "Referer": url.rsplit("/", 1)[0] + "/"}
+        r = requests.get(url, headers=retry_hdr, timeout=20, allow_redirects=True)
+        r.encoding = r.apparent_encoding or "utf-8"
+    if r.status_code != 200:
+        raise Exception(f"Trang web trả về lỗi {r.status_code}. Trang có thể chặn truy cập tự động.")
     return BeautifulSoup(r.text, "lxml")
 
 def get_chapters(index_url):
@@ -41,7 +60,11 @@ def get_chapters(index_url):
         "#list a, .listmain a, .chapter-list a, .mulu a, "
         "#chapterList a, .volume-wrap a, .book-list a, "
         "#catalog a, .catalog-content a, .chapter a, "
-        ".zjlist a, .chapters a, .mu_contain a, dd a, .box_con a"
+        ".zjlist a, .chapters a, .mu_contain a, dd a, .box_con a, "
+        "#dir a, .dir a, .booklist a, #booklist a, "
+        ".book_list a, #indexList a, .index_list a, "
+        "table a, .chapterlist a, ul.mulu a, "
+        "#chapterlist a, .ml_list a, li a"
     )
     if not containers:
         containers = [
