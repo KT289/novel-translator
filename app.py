@@ -42,34 +42,16 @@ def set_cache(url, data):
     p = CACHE / f"{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-# ====================== FETCH (ANTI-403) ======================
+# ====================== FETCH (working version) ======================
 def fetch(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Referer": "https://www.google.com/",
     }
-    for attempt in range(3):
-        try:
-            r = cffi_requests.get(
-                url,
-                headers=headers,
-                impersonate="chrome124",
-                timeout=30
-            )
-            if r.status_code == 200:
-                return BeautifulSoup(r.content, "lxml")
-            if r.status_code == 403:
-                time.sleep(2 ** attempt)
-                continue
-            raise Exception(f"Lỗi {r.status_code}")
-        except Exception as e:
-            if attempt == 2:
-                raise Exception(f"Không thể tải trang (Cloudflare): {str(e)}")
-            time.sleep(2)
-    raise Exception("Không thể bypass Cloudflare")
+    r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=25)
+    if r.status_code != 200:
+        raise Exception(f"Lỗi tải trang {r.status_code}")
+    return BeautifulSoup(r.content, "lxml")
 
 # ====================== LẤY MỤC LỤC ======================
 def get_chapters(index_url):
@@ -97,7 +79,7 @@ def get_chapters(index_url):
     set_cache(index_url, {"chapters": chapters})
     return chapters
 
-# ====================== LẤY NỘI DUNG ======================
+# ====================== LẤY NỘI DUNG (working version) ======================
 def get_content(url):
     cached = get_cache(url)
     if cached and "content" in cached:
@@ -125,11 +107,12 @@ def get_content(url):
     set_cache(url, {"content": final_text})
     return final_text
 
-# ====================== DỊCH GROK ======================
+# ====================== DỊCH GROK (STRONG VERSION) ======================
 def translate(text, glossary="", custom_prompt=""):
     if not text.strip():
         return "Không có nội dung để dịch."
 
+    # Chia chunk
     paragraphs = text.split("\n\n")
     chunks = []
     current = ""
@@ -152,9 +135,9 @@ def translate(text, glossary="", custom_prompt=""):
 YÊU CẦU BẮT BUỘC:
 - Dịch TOÀN BỘ văn bản sau sang tiếng Việt.
 - {tone}
-- Sử dụng bảng thuật ngữ nếu có.
-- Giữ nguyên văn phong kiếm hiệp, cổ trang.
-- Chỉ trả về bản dịch sạch bằng tiếng Việt, không thêm bất kỳ chữ nào khác.
+- Sử dụng bảng thuật ngữ nếu có (ưu tiên tuyệt đối).
+- Giữ nguyên văn phong kiếm hiệp, cổ trang, huyền huyễn.
+- Chỉ trả về bản dịch sạch bằng tiếng Việt, KHÔNG thêm chú thích, không giải thích, không ghi "Dịch:".
 
 {glossary_block}
 === VĂN BẢN CẦN DỊCH ===
