@@ -14,15 +14,29 @@ from curl_cffi import requests as cffi_requests
 app = Flask(__name__)
 
 # ====================== CONFIG ======================
+# Support both keys — Gemini preferred, XAI as fallback
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise Exception("Thiếu GEMINI_API_KEY trong Environment Variables")
+XAI_API_KEY = os.environ.get("XAI_API_KEY")
 
-AI_CLIENT = OpenAI(
-    api_key=GEMINI_API_KEY,
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
-MODEL = "gemini-3.1-flash-lite-preview"
+AI_CLIENT = None
+MODEL = None
+
+if GEMINI_API_KEY:
+    AI_CLIENT = OpenAI(
+        api_key=GEMINI_API_KEY,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
+    MODEL = "gemini-3.1-flash-lite-preview"
+    print(f"[OK] Using Gemini: {MODEL}")
+elif XAI_API_KEY:
+    AI_CLIENT = OpenAI(
+        api_key=XAI_API_KEY,
+        base_url="https://api.x.ai/v1"
+    )
+    MODEL = "grok-3-mini"
+    print(f"[OK] Using XAI/Grok: {MODEL}")
+else:
+    print("[WARN] No API key set! Set GEMINI_API_KEY or XAI_API_KEY in Railway Environment Variables")
 
 CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
@@ -206,6 +220,8 @@ def build_memory_block(mem, glossary=""):
     return "\n\n".join(parts)
 
 def extract_memory(cn, vn, mem, url):
+    if not AI_CLIENT:
+        return mem
     try:
         r = AI_CLIENT.chat.completions.create(
             model=MODEL,
@@ -231,6 +247,8 @@ CHỈ JSON."""}],
 def init_memory(url, text):
     mem = get_memory(url)
     if mem.get("n", 0) > 0 or mem.get("characters"):
+        return mem
+    if not AI_CLIENT:
         return mem
     try:
         r = AI_CLIENT.chat.completions.create(
@@ -275,6 +293,8 @@ def translate(text, glossary="", style="nguyenban", custom_prompt="",
              chapter_url="", novel_url=""):
     if not text.strip():
         return "Không có nội dung."
+    if not AI_CLIENT:
+        return "[Lỗi] Chưa cấu hình API key. Vào Railway → Variables → thêm GEMINI_API_KEY hoặc XAI_API_KEY"
     ck = f"{chapter_url}__s_{style}" if chapter_url else ""
     if ck:
         c = get_cache(ck, prefix="tr_")
@@ -344,6 +364,9 @@ def translate_titles(titles, novel_url=""):
     mem = get_memory(novel_url) if novel_url else {}
     mem_block = build_memory_block(mem)
 
+    if not AI_CLIENT:
+        return titles  # Return Chinese titles if no API key
+
     # Batch in groups of 80
     all_vn = []
     for start in range(0, len(titles), 80):
@@ -385,6 +408,15 @@ Trả về ĐÚNG số dòng, mỗi dòng: số. tiêu đề tiếng Việt
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "ok",
+        "model": MODEL or "NOT SET",
+        "api_key": "set" if AI_CLIENT else "MISSING - set GEMINI_API_KEY or XAI_API_KEY",
+    })
 
 
 @app.route("/api/chapters", methods=["POST"])
