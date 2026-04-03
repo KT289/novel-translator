@@ -219,12 +219,15 @@ async function openCh(i){
   try{
     const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:chapters[i].url, novel_url:novelUrl, glossary:$('glossary').value, style:selectedStyle, custom_prompt:$('customPrompt').value})});
-    const d=await r.json();hideStatus();
+    hideStatus();
+    /* Handle non-JSON responses (Railway timeout returns HTML) */
+    let d;
+    try { d=await r.json(); } catch { showError(`Server timeout hoặc lỗi (HTTP ${r.status}). Trang này có thể chặn nội dung. Thử dùng link all.html từ 69read.net.`);if(dot)dot.className='ch-dot';return; }
     if(!r.ok){showError(d.error||'Lỗi dịch');if(dot)dot.className='ch-dot';return}
     translated[i]=d.translation;if(dot)dot.className='ch-dot done';
     if(d.memory)updateMemBadge(d.memory);
     renderText(d.translation);renderCh();
-  }catch(e){hideStatus();showError('Lỗi kết nối: '+e.message);if(dot)dot.className='ch-dot'}
+  }catch(e){hideStatus();showError('Lỗi: '+e.message);if(dot)dot.className='ch-dot'}
 }
 function renderText(t){let h=t.split(/\n+/).filter(p=>p.trim()).map(p=>`<p>${p}</p>`).join('');if(currentIdx>=0&&currentIdx<chapters.length-1)h+=`<button class="next-btn" onclick="nav(1)">Chương tiếp theo →</button>`;$('readerBody').innerHTML=h;window.scrollTo({top:0,behavior:'smooth'})}
 function nav(d){const n=currentIdx+d;if(n>=0&&n<chapters.length)openCh(n)}
