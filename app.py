@@ -81,14 +81,13 @@ def is_all_page(url):
 
 # ====================== PARSE CATALOG (69SHUBA BOOK PAGE) ======================
 def parse_catalog(url):
-    """Đặc biệt dành cho trang https://www.69shuba.com/book/51230/"""
+    """Đặc biệt tối ưu cho trang https://www.69shuba.com/book/51230/"""
     cached = get_cache(url, prefix="catalog_")
     if cached:
         return cached
 
     soup = fetch(url)
 
-    # Novel title
     title_tag = soup.find("title")
     novel_title = ""
     if title_tag:
@@ -97,7 +96,7 @@ def parse_catalog(url):
     chapters = []
     seen = set()
 
-    # 1. Tìm trong #catalog (cấu trúc chính của trang book/)
+    # 1. Tìm trong #catalog (cấu trúc chính)
     catalog = soup.select_one("#catalog") or soup.select_one(".catalog")
     if catalog:
         for a in catalog.find_all("a"):
@@ -109,8 +108,8 @@ def parse_catalog(url):
                     seen.add(full)
                     chapters.append({"title": title, "url": full})
 
-    # 2. Fallback: tìm tất cả link có số chương
-    if len(chapters) < 10:
+    # 2. Fallback mạnh: tìm tất cả link có số chương
+    if len(chapters) < 20:
         for a in soup.find_all("a"):
             href = a.get("href", "").strip()
             title = a.get_text(strip=True).strip()
@@ -134,7 +133,7 @@ def get_chapters_standard(url):
     selectors = [
         "#list a", ".listmain a", ".chapter-list a", ".mulu a",
         "#chapterList a", "dd a", ".book-list a", ".chapters a",
-        ".catalog a", "#catalog a", "ul li a", ".catalog ul li a"
+        ".catalog a", "#catalog a"
     ]
     links = []
     for sel in selectors:
@@ -208,7 +207,7 @@ def get_content_standard(url):
     set_cache(url, final, prefix="raw_")
     return final
 
-# ====================== MEMORY (GIỮ NGUYÊN) ======================
+# ====================== MEMORY & TRANSLATE (GIỮ NGUYÊN) ======================
 def get_memory(url):
     m = get_cache(url, prefix="memory_")
     return m or {"characters": {}, "places": {}, "terms": {}, "summary": "", "n": 0}
@@ -294,7 +293,6 @@ CHỈ JSON."""}],
         print(f"Memory init error: {e}")
     return mem
 
-# ====================== TRANSLATE (GIỮ NGUYÊN) ======================
 STYLES = {
     "cotrang": "Dịch phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiếm hiệp.",
     "hiendai": "Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi.",
@@ -384,8 +382,7 @@ QUY TẮC:
 # ====================== ROUTES ======================
 @app.route("/")
 def index():
-    return render_template("index.html")
-
+    return render_template("index.html")   # bạn đã rename index-3.html thành index.html
 
 @app.route("/api/chapters", methods=["POST"])
 def api_chapters():
@@ -393,22 +390,18 @@ def api_chapters():
     if not url:
         return jsonify({"error": "Vui lòng nhập URL"}), 400
     try:
-        # Nếu là trang catalog của 69shuba.com/book/XXXXX thì dùng parser đặc biệt
+        # Trang catalog của 69shuba
         if "69shuba.com/book/" in url or "69read.net/book/" in url:
             data = parse_catalog(url)
-            ch_list = []
-            for ch in data["chapters"]:
-                ch_list.append({"title": ch["title"], "url": ch["url"]})
+            ch_list = [{"title": ch["title"], "url": ch["url"]} for ch in data["chapters"]]
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
                 "mode": "catalog",
             })
         elif is_all_page(url):
-            data = parse_catalog(url)  # fallback
-            ch_list = []
-            for ch in data["chapters"]:
-                ch_list.append({"title": ch["title"], "url": ch["url"]})
+            data = parse_catalog(url)
+            ch_list = [{"title": ch["title"], "url": ch["url"]} for ch in data["chapters"]]
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
@@ -434,7 +427,7 @@ def api_chapters():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+# (các route init_memory, translate, _ms giữ nguyên như trước)
 @app.route("/api/init_memory", methods=["POST"])
 def api_init_memory():
     d = request.json
