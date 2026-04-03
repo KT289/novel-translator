@@ -67,20 +67,20 @@ def fetch_aggressive(url):
         "Accept-Encoding": "gzip, deflate, br",
         "Referer": "https://www.google.com/",
     }
-    for attempt in range(4):
+    for attempt in range(2):
         try:
-            r = cffi_requests.get(url, headers=headers, impersonate="chrome124", timeout=30)
+            r = cffi_requests.get(url, headers=headers, impersonate="chrome124", timeout=15)
             if r.status_code == 200:
                 return BeautifulSoup(r.content, "lxml")
-            if r.status_code in (403, 503):
-                time.sleep(2 ** attempt)
+            if r.status_code in (403, 503) and attempt == 0:
+                time.sleep(2)
                 continue
-            raise Exception(f"HTTP {r.status_code}")
+            raise Exception(f"Trang chặn truy cập (HTTP {r.status_code}). Thử dùng link all.html từ 69read.net")
         except Exception as e:
-            if attempt == 3:
+            if attempt == 1:
                 raise
             time.sleep(2)
-    raise Exception("Trang web chặn truy cập sau nhiều lần thử")
+    raise Exception("Không thể tải nội dung chương")
 
 
 # Smart fetch — try simple first, then aggressive
