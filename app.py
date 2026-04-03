@@ -48,7 +48,13 @@ def is_all_page(url):
     return "all.html" in path or "all.htm" in path or "/all" in path
 
 # ====================== PARSE ALL.HTML ======================
-CHAPTER_RE = re.compile(r'^(第[零一二三四五六七八九十百千万\d]+[章节回集]\s*.+)$')
+TITLE_RE = re.compile(
+    r'第[零一二三四五六七八九十百千万\d]{1,10}[章节回集卷]\s*[^\n]{0,60}'
+)
+NOISE_RE = re.compile(
+    r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
+    r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名)"
+)
 
 def parse_all_html(url):
     cached = get_cache(url, prefix="allhtml_")
@@ -57,8 +63,11 @@ def parse_all_html(url):
     title_tag = soup.find("title")
     novel_title = title_tag.get_text(strip=True).split("_")[0].split("-")[0].strip() if title_tag else ""
     for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]): tag.decompose()
+
+    # Find the content area
     content_el = None
-    for sel in ["#content", "#all", "#at", ".content", "#BookText", "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
+    for sel in ["#content", "#all", "#at", ".content", "#BookText",
+                "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
         c = soup.select_one(sel)
         if c and len(c.get_text(strip=True)) > 500: content_el = c; break
     if not content_el:
@@ -68,17 +77,30 @@ def parse_all_html(url):
             if len(txt) > best_len: best, best_len = c, len(txt)
         if best and best_len > 500: content_el = best
     if not content_el: return {"title": novel_title, "chapters": []}
+
     for br in content_el.find_all("br"): br.replace_with("\n")
-    lines = [l.strip() for l in content_el.get_text(separator="\n").split("\n") if l.strip()]
-    noise = re.compile(r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名)")
-    chapters, cur_title, cur_lines = [], None, []
-    for line in lines:
-        if noise.search(line): continue
-        if CHAPTER_RE.match(line):
-            if cur_title and cur_lines: chapters.append({"title": cur_title, "content": "\n\n".join(cur_lines)})
-            cur_title, cur_lines = line, []
-        elif cur_title: cur_lines.append(line)
-    if cur_title and cur_lines: chapters.append({"title": cur_title, "content": "\n\n".join(cur_lines)})
+    full_text = content_el.get_text(separator="\n")
+
+    # Find ALL chapter titles and their positions in the full text
+    matches = list(TITLE_RE.finditer(full_text))
+    if not matches: return {"title": novel_title, "chapters": []}
+
+    chapters = []
+    for i, m in enumerate(matches):
+        title = m.group().strip()
+        # Content starts after this title, ends at next title
+        start = m.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
+        raw_content = full_text[start:end].strip()
+
+        # Clean the content
+        lines = [l.strip() for l in raw_content.split("\n") if l.strip()]
+        lines = [l for l in lines if not NOISE_RE.search(l)]
+        content = "\n\n".join(lines)
+
+        if len(content) > 50:  # Skip empty/tiny chapters
+            chapters.append({"title": title, "content": content})
+
     result = {"title": novel_title, "chapters": chapters}
     set_cache(url, result, prefix="allhtml_")
     return result
