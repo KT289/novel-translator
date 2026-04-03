@@ -48,18 +48,17 @@ def set_cache(url, data, prefix=""):
 # ====================== FETCH ======================
 def fetch(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
         "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Referer": "https://www.69shuba.com/",
     }
     r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=60)
     if r.status_code != 200:
-        raise Exception(f"HTTP {r.status_code}")
+        raise Exception(f"HTTP {r.status_code} - Site 69shuba chặn request (thử lại sau 5s)")
+    
+    time.sleep(0.7)   # ← Quan trọng: tránh rate-limit 503 của site
     return BeautifulSoup(r.content, "lxml")
-
-
-def is_all_page(url):
-    path = urlparse(url).path.lower()
-    return "all.html" in path or "all.htm" in path
 
 
 # ====================== PARSE ALL.HTML (UPDATED) ======================
@@ -193,6 +192,42 @@ def get_content_standard(url):
         return cached
 
     soup = fetch(url)
+
+    # ====================== XỬ LÝ ĐẶC BIỆT CHO 69SHUBA.COM ======================
+    if "69shuba.com" in url or "69read.net" in url:
+        el = soup.select_one(".txtnav")
+        if el:
+            # Xóa hết phần rác
+            for bad in el.select(".txtinfo, .yueduad1, .bottom-ad, .bottom-ad2, .page1, #txtright, .tools, script, style, header, footer, nav"):
+                bad.decompose()
+
+            # Xóa tiêu đề chương (không cần lặp lại trong nội dung)
+            h1 = el.find("h1")
+            if h1:
+                h1.decompose()
+
+            # br → newline
+            for br in el.find_all("br"):
+                br.replace_with("\n")
+
+            text = el.get_text(separator="\n")
+            lines = [l.strip() for l in text.split("\n") if l.strip()]
+
+            # Lọc noise mạnh hơn
+            cleaned = []
+            for l in lines:
+                if NOISE_RE.search(l):
+                    continue
+                if any(x in l for x in ["69书吧", "上一章", "下一章", "目录", "书签", "收藏", "设置", "白天", "广告"]):
+                    continue
+                cleaned.append(l)
+
+            final = "\n\n".join(cleaned)
+            if len(final) > 50:   # đảm bảo có nội dung
+                set_cache(url, final, prefix="raw_")
+                return final
+
+    # ====================== LOGIC CŨ (dành cho các site khác) ======================
     for t in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
         t.decompose()
 
