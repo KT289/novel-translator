@@ -4,148 +4,148 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Novel Translator</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Be+Vietnam+Pro:wght@300;400;500&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #FFFBF7; --surface: #FFF8F2; --surface2: #FFF3EB; --surface3: #FFEDE2;
-  --accent: #D4856A; --accent-light: #E8A690; --accent-dark: #B8694F;
-  --accent-bg: #D4856A0C; --accent-bg2: #D4856A18;
-  --text: #3D2E26; --text2: #7A6A60; --text3: #B0A098;
-  --rule: #F0E6DE; --rule2: #E8DCD2;
-  --green: #7AA672; --red: #C07050;
-  --shadow: 0 1px 3px rgba(60,40,30,0.04); --shadow2: 0 4px 20px rgba(60,40,30,0.06);
-  --r-bg: #FFFBF7; --r-text: #3D2E26;
-  --r-font: 'Crimson Pro', serif; --r-size: 19px; --r-lh: 2.05;
+  --bg:#FFFBF7;--surface:#FFF8F2;--surface2:#FFF3EB;--surface3:#FFEDE2;
+  --accent:#D4856A;--accent-lt:#E8A690;--accent-dk:#B8694F;--accent-bg:#D4856A10;--accent-bg2:#D4856A1C;
+  --text:#3D2E26;--text2:#7A6A60;--text3:#B0A098;
+  --rule:#F0E6DE;--rule2:#E8DCD2;--green:#7AA672;--red:#C07050;
+  --r-bg:#FFFBF7;--r-text:#3D2E26;--r-font:'Crimson Pro',serif;--r-size:19px;--r-lh:2.05;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-html { font-size:16px; -webkit-font-smoothing:antialiased; }
-body { background:var(--bg); color:var(--text); font-family:'Be Vietnam Pro',system-ui,sans-serif; min-height:100vh; overflow-x:hidden; }
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:'Be Vietnam Pro',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
 
-/* ══════════ LANDING ══════════ */
-#landing { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; position:relative; }
-#landing::before { content:''; position:absolute; top:-10%; right:-5%; width:600px; height:600px; background:radial-gradient(circle,#FFDDC820 0%,transparent 70%); pointer-events:none; }
-.l-logo { width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--rule2); box-shadow:0 4px 24px rgba(212,133,106,0.12); margin-bottom:24px; z-index:1; }
-.l-title { font-family:'Playfair Display',serif; font-size:36px; font-weight:500; color:var(--text); letter-spacing:-0.5px; margin-bottom:6px; z-index:1; }
-.l-sub { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--text3); margin-bottom:40px; z-index:1; }
-.l-input-row { display:flex; gap:10px; width:100%; max-width:540px; z-index:1; }
-.l-input { flex:1; padding:15px 20px; background:#fff; border:1.5px solid var(--rule2); border-radius:14px; font-size:14px; font-family:inherit; color:var(--text); outline:none; transition:all .3s; box-shadow:var(--shadow); }
-.l-input:focus { border-color:var(--accent-light); box-shadow:0 0 0 4px var(--accent-bg2); }
-.l-input::placeholder { color:var(--text3); }
-.l-btn { padding:0 28px; background:var(--accent); color:#fff; border:none; border-radius:14px; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; letter-spacing:.5px; transition:all .25s; white-space:nowrap; box-shadow:0 2px 12px rgba(212,133,106,0.25); }
-.l-btn:hover { background:var(--accent-dark); box-shadow:0 4px 20px rgba(212,133,106,0.35); transform:translateY(-1px); }
-.l-btn:disabled { opacity:.4; cursor:default; transform:none; box-shadow:none; }
+/* ══ LANDING ══ */
+#landing{align-items:center;justify-content:center;padding:40px 24px;position:relative}
+#landing::before{content:'';position:absolute;top:-10%;right:-5%;width:600px;height:600px;background:radial-gradient(circle,#FFDDC820 0%,transparent 70%);pointer-events:none}
+.l-logo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid var(--rule2);box-shadow:0 4px 24px rgba(212,133,106,0.12);margin-bottom:22px;z-index:1}
+.l-title{font-family:'Playfair Display',serif;font-size:34px;font-weight:500;color:var(--text);margin-bottom:5px;z-index:1}
+.l-sub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:36px;z-index:1}
+.l-input-row{display:flex;gap:10px;width:100%;max-width:540px;z-index:1}
+.l-input{flex:1;padding:14px 18px;background:#fff;border:1.5px solid var(--rule2);border-radius:14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:all .3s;box-shadow:0 1px 3px rgba(60,40,30,0.04)}
+.l-input:focus{border-color:var(--accent-lt);box-shadow:0 0 0 4px var(--accent-bg2)}
+.l-input::placeholder{color:var(--text3)}
+.l-btn{padding:0 26px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .25s;white-space:nowrap;box-shadow:0 2px 12px rgba(212,133,106,0.25)}
+.l-btn:hover{background:var(--accent-dk);transform:translateY(-1px)}
+.l-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+.l-styles{margin-top:18px;width:100%;max-width:540px;z-index:1}
+.l-styles-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;text-align:center}
+.l-styles-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.style-chip{padding:7px 16px;background:#fff;border:1.5px solid var(--rule2);border-radius:22px;font-size:12px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
+.style-chip:hover{border-color:var(--accent-lt);color:var(--accent-dk)}
+.style-chip.active{border-color:var(--accent);color:var(--accent-dk);background:var(--accent-bg2);font-weight:500}
+.l-status{margin-top:16px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);z-index:1}
+.l-history{margin-top:28px;width:100%;max-width:540px;z-index:1}
+.l-history-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.l-hist-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:#fff;border:1px solid var(--rule);border-radius:12px;margin-bottom:5px;cursor:pointer;transition:all .2s;box-shadow:0 1px 3px rgba(60,40,30,0.03)}
+.l-hist-item:hover{border-color:var(--accent-lt)}
+.l-hist-dot{width:5px;height:5px;border-radius:50%;background:var(--accent-lt);flex-shrink:0}
+.l-hist-text{flex:1;overflow:hidden}
+.l-hist-url{font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.l-hist-ch{font-size:10px;color:var(--text3);margin-top:1px}
+.l-hist-del{background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;padding:4px;opacity:.4;transition:opacity .2s}
+.l-hist-del:hover{opacity:1;color:var(--red)}
 
-.l-styles { margin-top:20px; width:100%; max-width:540px; z-index:1; }
-.l-styles-label { font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-bottom:10px; text-align:center; }
-.l-styles-row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-.style-chip { padding:8px 18px; background:#fff; border:1.5px solid var(--rule2); border-radius:24px; font-size:12.5px; color:var(--text2); cursor:pointer; font-family:inherit; transition:all .25s; }
-.style-chip:hover { border-color:var(--accent-light); color:var(--accent-dark); background:var(--surface2); }
-.style-chip.active { border-color:var(--accent); color:var(--accent-dark); background:var(--accent-bg2); font-weight:500; }
+/* ══ NOVEL INFO ══ */
+#novelInfo{align-items:center;padding:40px 24px 60px}
+.ni-card{width:100%;max-width:600px;background:#fff;border-radius:20px;padding:32px 28px;box-shadow:0 2px 20px rgba(60,40,30,0.06);border:1px solid var(--rule)}
+.ni-back{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;padding:0}
+.ni-back:hover{color:var(--accent)}
+.ni-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.3}
+.ni-title-vi{font-size:13px;color:var(--text2);margin-bottom:16px;font-style:italic}
+.ni-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.ni-stat{padding:6px 14px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;font-size:11px;color:var(--text2)}
+.ni-stat b{color:var(--text);font-weight:500}
+.ni-mem{padding:8px 14px;background:var(--accent-bg);border:1px solid var(--accent-lt);border-radius:10px;font-size:11px;color:var(--accent-dk);display:none;margin-bottom:16px}
+.ni-mem.on{display:block}
+.ni-style-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.ni-styles{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.ni-start{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 2px 12px rgba(212,133,106,0.25)}
+.ni-start:hover{background:var(--accent-dk)}
+.ni-divider{height:1px;background:var(--rule);margin:20px 0}
+.ni-ch-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;justify-content:space-between}
+.ni-ch-list{max-height:50vh;overflow-y:auto}
+.ni-ch{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--text2)}
+.ni-ch:hover{background:var(--surface)}
+.ni-ch-num{font-size:11px;color:var(--text3);width:32px;text-align:right;flex-shrink:0}
+.ni-ch-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 
-.l-status { margin-top:18px; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text2); z-index:1; }
-.l-history { margin-top:32px; width:100%; max-width:540px; z-index:1; }
-.l-history-title { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
-.l-hist-item { display:flex; align-items:center; gap:14px; padding:12px 16px; background:#fff; border:1px solid var(--rule); border-radius:12px; margin-bottom:6px; cursor:pointer; transition:all .2s; box-shadow:var(--shadow); }
-.l-hist-item:hover { border-color:var(--accent-light); box-shadow:var(--shadow2); }
-.l-hist-dot { width:6px; height:6px; border-radius:50%; background:var(--accent-light); flex-shrink:0; }
-.l-hist-text { flex:1; overflow:hidden; }
-.l-hist-url { font-size:12px; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.l-hist-ch { font-size:10px; color:var(--text3); margin-top:2px; }
-.l-hist-del { background:none; border:none; color:var(--text3); font-size:14px; cursor:pointer; padding:4px; opacity:.4; transition:opacity .2s; }
-.l-hist-del:hover { opacity:1; color:var(--red); }
-
-/* ══════════ READER ══════════ */
-#readerScreen { display:none; min-height:100vh; flex-direction:column; }
-.topbar { padding:12px 20px; border-bottom:1px solid var(--rule); display:flex; align-items:center; gap:12px; background:#fff; position:sticky; top:0; z-index:50; box-shadow:0 1px 8px rgba(60,40,30,0.03); }
-.tb-logo { width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid var(--rule2); cursor:pointer; }
-.tb-title { flex:1; font-family:'Playfair Display',serif; font-size:15px; color:var(--text); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.tb-btn { background:none; border:1px solid var(--rule); border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text2); font-size:16px; transition:all .2s; }
-.tb-btn:hover { border-color:var(--accent-light); color:var(--accent); }
-
-/* Memory badge */
-.mem-badge { display:none; padding:3px 10px; background:var(--accent-bg2); border:1px solid var(--accent-light); border-radius:20px; font-size:10px; color:var(--accent-dark); letter-spacing:.5px; white-space:nowrap; }
-.mem-badge.on { display:inline-flex; align-items:center; gap:4px; }
-
-.ch-panel { border-bottom:1px solid var(--rule); display:none; }
-.ch-panel.open { display:block; animation:fadeUp .2s; }
-.ch-head { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--rule); font-size:10px; color:var(--text3); letter-spacing:2px; text-transform:uppercase; }
-.ch-list { max-height:45vh; overflow-y:auto; background:#fff; }
-.ch-item { padding:11px 20px; display:flex; align-items:center; gap:12px; cursor:pointer; border-bottom:1px solid var(--rule); transition:background .15s; }
-.ch-item:hover { background:var(--surface); }
-.ch-item.active { background:var(--surface2); border-left:3px solid var(--accent); padding-left:17px; }
-.ch-num { font-size:11px; color:var(--text3); width:28px; text-align:right; flex-shrink:0; }
-.ch-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; background:var(--rule2); transition:background .3s; }
-.ch-dot.done { background:var(--green); } .ch-dot.busy { background:var(--accent); animation:pulse 1s infinite; }
-.ch-title { font-size:13px; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
-.ch-ok { font-size:9px; color:var(--green); flex-shrink:0; }
-
-.settings-drawer { border-bottom:1px solid var(--rule); background:var(--surface); display:none; padding:18px 20px; }
-.settings-drawer.open { display:block; animation:fadeUp .2s; }
-.s-section { margin-bottom:16px; } .s-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
-.s-row { display:flex; gap:6px; flex-wrap:wrap; }
-.s-chip { padding:6px 14px; background:#fff; border:1px solid var(--rule2); border-radius:22px; font-size:11.5px; color:var(--text2); cursor:pointer; font-family:inherit; transition:all .2s; }
-.s-chip:hover { border-color:var(--accent-light); color:var(--accent); }
-.s-chip.active { border-color:var(--accent); color:var(--accent-dark); background:var(--accent-bg2); }
-.s-color { width:32px; height:32px; border-radius:50%; border:2px solid var(--rule2); cursor:pointer; transition:all .2s; }
-.s-color:hover,.s-color.active { border-color:var(--accent); box-shadow:0 0 12px var(--accent-bg2); }
-.s-slider-row { display:flex; align-items:center; gap:12px; }
-.s-slider { flex:1; -webkit-appearance:none; appearance:none; height:3px; background:var(--rule2); border-radius:2px; outline:none; }
-.s-slider::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; border:none; }
-.s-val { font-size:12px; color:var(--text2); width:32px; text-align:right; }
-.s-textarea { width:100%; padding:10px 14px; background:#fff; border:1px solid var(--rule2); border-radius:10px; font-size:12px; color:var(--text); outline:none; resize:vertical; min-height:60px; line-height:1.7; font-family:inherit; transition:all .3s; }
-.s-textarea:focus { border-color:var(--accent-light); box-shadow:0 0 0 3px var(--accent-bg); }
-.s-textarea::placeholder { color:var(--text3); }
-.s-foot { font-size:10px; color:var(--text3); margin-top:5px; display:flex; justify-content:space-between; }
-.s-link { background:none; border:none; color:var(--accent); font-size:10px; cursor:pointer; font-family:inherit; opacity:.7; }
-.s-link:hover { opacity:1; }
-
-.ch-nav { padding:10px 20px; border-bottom:1px solid var(--rule); display:none; justify-content:space-between; align-items:center; background:#fff; }
-.ch-nav.open { display:flex; }
-.nav-btn { padding:8px 18px; background:#fff; border:1px solid var(--rule2); border-radius:10px; font-size:12px; color:var(--text2); cursor:pointer; font-family:inherit; transition:all .2s; }
-.nav-btn:hover:not(:disabled) { border-color:var(--accent-light); color:var(--accent); }
-.nav-btn:disabled { color:var(--text3); opacity:.3; cursor:default; }
-.nav-title { font-size:13px; color:var(--accent-dark); font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:45%; text-align:center; font-family:'Playfair Display',serif; }
-
-.status-bar { padding:12px 20px; border-bottom:1px solid var(--rule); display:none; align-items:center; gap:10px; background:var(--surface); }
-.status-bar.on { display:flex; }
-.spinner { width:14px; height:14px; border:1.5px solid var(--rule2); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
-.status-text { font-size:13px; color:var(--text2); }
-.error-bar { padding:12px 20px; border-bottom:1px solid #F0D0C8; background:#FFF5F2; font-size:13px; color:var(--red); display:none; }
-.error-bar.on { display:block; }
-
-.reader-area { flex:1; padding:48px 24px 100px; background:var(--r-bg); transition:background .3s; }
-.reader-body { max-width:660px; margin:0 auto; font-family:var(--r-font); font-size:var(--r-size); line-height:var(--r-lh); color:var(--r-text); font-weight:300; transition:all .3s; }
-.reader-body p { margin-bottom:.9em; text-indent:2em; }
-.next-btn { display:block; margin:50px auto 0; padding:13px 36px; background:transparent; border:1px solid var(--rule2); border-radius:12px; font-size:12px; color:var(--text2); cursor:pointer; font-family:'Be Vietnam Pro',sans-serif; transition:all .3s; }
-.next-btn:hover { border-color:var(--accent); color:var(--accent); }
-.reader-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:40vh; text-align:center; color:var(--text3); font-size:13px; gap:8px; }
-
-@keyframes spin { to { transform:rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }
-@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:var(--rule2); border-radius:2px; }
-
-@media(min-width:768px) {
-  .topbar,.ch-head,.ch-nav,.status-bar,.error-bar,.settings-drawer { padding-left:40px; padding-right:40px; }
-  .ch-item { padding-left:40px; padding-right:40px; } .ch-item.active { padding-left:37px; }
-  .reader-area { padding:60px 48px 120px; }
+/* ══ READER ══ */
+.topbar{padding:10px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;background:#fff;position:sticky;top:0;z-index:50;box-shadow:0 1px 8px rgba(60,40,30,0.03)}
+.tb-logo{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--rule2);cursor:pointer}
+.tb-title{flex:1;font-family:'Playfair Display',serif;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-btn{background:none;border:1px solid var(--rule);border-radius:9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:15px;transition:all .2s}
+.tb-btn:hover{border-color:var(--accent-lt);color:var(--accent)}
+.mem-badge{display:none;padding:2px 8px;background:var(--accent-bg2);border:1px solid var(--accent-lt);border-radius:18px;font-size:9px;color:var(--accent-dk);white-space:nowrap}
+.mem-badge.on{display:inline-flex;align-items:center;gap:3px}
+.ch-panel{border-bottom:1px solid var(--rule);display:none}.ch-panel.open{display:block;animation:fadeUp .2s}
+.ch-head{padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--rule);font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.ch-list{max-height:45vh;overflow-y:auto;background:#fff}
+.ch-item{padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--rule);transition:background .15s}
+.ch-item:hover{background:var(--surface)}.ch-item.active{background:var(--surface2);border-left:3px solid var(--accent);padding-left:13px}
+.ch-num{font-size:11px;color:var(--text3);width:26px;text-align:right;flex-shrink:0}
+.ch-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--rule2);transition:background .3s}
+.ch-dot.done{background:var(--green)}.ch-dot.busy{background:var(--accent);animation:pulse 1s infinite}
+.ch-title{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ch-ok{font-size:9px;color:var(--green);flex-shrink:0}
+.settings-drawer{border-bottom:1px solid var(--rule);background:var(--surface);display:none;padding:16px}.settings-drawer.open{display:block;animation:fadeUp .2s}
+.s-section{margin-bottom:14px}.s-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.s-row{display:flex;gap:5px;flex-wrap:wrap}
+.s-chip{padding:5px 12px;background:#fff;border:1px solid var(--rule2);border-radius:20px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
+.s-chip:hover{border-color:var(--accent-lt);color:var(--accent)}.s-chip.active{border-color:var(--accent);color:var(--accent-dk);background:var(--accent-bg2)}
+.s-color{width:30px;height:30px;border-radius:50%;border:2px solid var(--rule2);cursor:pointer;transition:all .2s}
+.s-color:hover,.s-color.active{border-color:var(--accent)}
+.s-slider-row{display:flex;align-items:center;gap:10px}
+.s-slider{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--rule2);border-radius:2px;outline:none}
+.s-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+.s-val{font-size:11px;color:var(--text2);width:28px;text-align:right}
+.s-textarea{width:100%;padding:8px 12px;background:#fff;border:1px solid var(--rule2);border-radius:8px;font-size:11px;color:var(--text);outline:none;resize:vertical;min-height:50px;line-height:1.6;font-family:inherit;transition:all .3s}
+.s-textarea:focus{border-color:var(--accent-lt)}.s-textarea::placeholder{color:var(--text3)}
+.s-foot{font-size:9px;color:var(--text3);margin-top:4px;display:flex;justify-content:space-between}
+.s-link{background:none;border:none;color:var(--accent);font-size:9px;cursor:pointer;font-family:inherit;opacity:.7}.s-link:hover{opacity:1}
+.ch-nav{padding:8px 16px;border-bottom:1px solid var(--rule);display:none;justify-content:space-between;align-items:center;background:#fff}.ch-nav.open{display:flex}
+.nav-btn{padding:7px 16px;background:#fff;border:1px solid var(--rule2);border-radius:9px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
+.nav-btn:hover:not(:disabled){border-color:var(--accent-lt);color:var(--accent)}.nav-btn:disabled{color:var(--text3);opacity:.3;cursor:default}
+.nav-title{font-size:12px;color:var(--accent-dk);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%;text-align:center;font-family:'Playfair Display',serif}
+.status-bar{padding:10px 16px;border-bottom:1px solid var(--rule);display:none;align-items:center;gap:8px;background:var(--surface)}.status-bar.on{display:flex}
+.spinner{width:13px;height:13px;border:1.5px solid var(--rule2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.status-text{font-size:12px;color:var(--text2)}
+.error-bar{padding:10px 16px;border-bottom:1px solid #F0D0C8;background:#FFF5F2;font-size:12px;color:var(--red);display:none}.error-bar.on{display:block}
+.reader-area{flex:1;padding:44px 20px 100px;background:var(--r-bg);transition:background .3s}
+.reader-body{max-width:660px;margin:0 auto;font-family:var(--r-font);font-size:var(--r-size);line-height:var(--r-lh);color:var(--r-text);font-weight:300;transition:all .3s}
+.reader-body p{margin-bottom:.85em;text-indent:2em}
+.next-btn{display:block;margin:44px auto 0;padding:12px 32px;background:transparent;border:1px solid var(--rule2);border-radius:11px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .3s}
+.next-btn:hover{border-color:var(--accent);color:var(--accent)}
+.reader-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:35vh;color:var(--text3);font-size:13px;gap:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+@media(min-width:768px){
+  .topbar,.ch-head,.ch-nav,.status-bar,.error-bar,.settings-drawer{padding-left:32px;padding-right:32px}
+  .ch-item{padding-left:32px;padding-right:32px}.ch-item.active{padding-left:29px}
+  .reader-area{padding:56px 40px 120px}
 }
 </style>
 </head>
 <body>
 
-<!-- LANDING -->
-<div id="landing">
+<!-- ══ LANDING ══ -->
+<div id="landing" class="screen active">
   <img src="/static/logo.jpeg" class="l-logo" alt="">
   <div class="l-title">Novel Translator</div>
-  <div class="l-sub">Trung → Việt · AI Dịch Thuật</div>
+  <div class="l-sub">Trung → Việt · Gemini AI</div>
   <div class="l-input-row">
-    <input class="l-input" id="landingUrl" placeholder="Dán URL mục lục truyện..." onkeydown="if(event.key==='Enter')startNovel()">
-    <button class="l-btn" id="landingBtn" onclick="startNovel()">Đọc</button>
+    <input class="l-input" id="landingUrl" placeholder="Dán URL truyện (khuyên dùng all.html)..." onkeydown="if(event.key==='Enter')loadNovel()">
+    <button class="l-btn" id="landingBtn" onclick="loadNovel()">Đọc</button>
   </div>
   <div class="l-styles">
     <div class="l-styles-label">Phong cách dịch</div>
-    <div class="l-styles-row">
+    <div class="l-styles-row" id="landingStyles">
       <button class="style-chip active" data-style="nguyenban" onclick="pickStyle(this)">Nguyên bản</button>
       <button class="style-chip" data-style="cotrang" onclick="pickStyle(this)">Cổ trang</button>
       <button class="style-chip" data-style="hiendai" onclick="pickStyle(this)">Hiện đại</button>
@@ -153,214 +153,204 @@ body { background:var(--bg); color:var(--text); font-family:'Be Vietnam Pro',sys
       <button class="style-chip" data-style="satnghia" onclick="pickStyle(this)">Sát nghĩa</button>
     </div>
   </div>
-  <div class="l-status" id="landingStatus" style="display:none">
-    <div class="spinner"></div><span id="landingStatusText"></span>
-  </div>
+  <div class="l-status" id="landingStatus" style="display:none"><div class="spinner"></div><span id="landingStatusText"></span></div>
   <div class="l-history" id="historySection" style="display:none">
     <div class="l-history-title">Đọc gần đây</div>
     <div id="historyList"></div>
   </div>
 </div>
 
-<!-- READER -->
-<div id="readerScreen">
-  <div class="topbar">
-    <img src="/static/logo.jpeg" class="tb-logo" onclick="goHome()" title="Về trang chủ">
-    <span class="tb-title" id="tbTitle">Novel Translator</span>
-    <span class="mem-badge" id="memBadge" title="Bộ nhớ truyện">⚡ Memory</span>
-    <button class="tb-btn" onclick="togglePanel('chPanel')" title="Mục lục">☰</button>
-    <button class="tb-btn" onclick="togglePanel('settingsDrawer')" title="Cài đặt">⚙</button>
-  </div>
-  <div class="ch-panel" id="chPanel">
-    <div class="ch-head"><span id="chCount"></span></div>
-    <div class="ch-list" id="chList"></div>
-  </div>
-  <div class="settings-drawer" id="settingsDrawer">
-    <div class="s-section">
-      <div class="s-label">Phong cách dịch</div>
-      <div class="s-row" id="readerStylePicker">
-        <button class="s-chip active" data-style="nguyenban" onclick="pickReaderStyle(this)">Nguyên bản</button>
-        <button class="s-chip" data-style="cotrang" onclick="pickReaderStyle(this)">Cổ trang</button>
-        <button class="s-chip" data-style="hiendai" onclick="pickReaderStyle(this)">Hiện đại</button>
-        <button class="s-chip" data-style="langman" onclick="pickReaderStyle(this)">Lãng mạn</button>
-        <button class="s-chip" data-style="satnghia" onclick="pickReaderStyle(this)">Sát nghĩa</button>
-      </div>
+<!-- ══ NOVEL INFO ══ -->
+<div id="novelInfo" class="screen">
+  <div class="ni-card">
+    <button class="ni-back" onclick="goLanding()">← Quay lại</button>
+    <div class="ni-title" id="niTitle">—</div>
+    <div class="ni-title-vi" id="niTitleVi"></div>
+    <div class="ni-stats" id="niStats"></div>
+    <div class="ni-mem" id="niMem"></div>
+    <div class="ni-style-label">Phong cách dịch</div>
+    <div class="ni-styles" id="niStyles">
+      <button class="style-chip active" data-style="nguyenban" onclick="pickStyle(this)">Nguyên bản</button>
+      <button class="style-chip" data-style="cotrang" onclick="pickStyle(this)">Cổ trang</button>
+      <button class="style-chip" data-style="hiendai" onclick="pickStyle(this)">Hiện đại</button>
+      <button class="style-chip" data-style="langman" onclick="pickStyle(this)">Lãng mạn</button>
+      <button class="style-chip" data-style="satnghia" onclick="pickStyle(this)">Sát nghĩa</button>
     </div>
-    <div class="s-section">
-      <div class="s-label">Phông chữ</div>
-      <div class="s-row" id="fontPicker">
-        <button class="s-chip active" data-font="'Crimson Pro',serif" onclick="setFont(this)">Crimson</button>
-        <button class="s-chip" data-font="'Noto Serif',serif" onclick="setFont(this)">Noto Serif</button>
-        <button class="s-chip" data-font="'Lora',serif" onclick="setFont(this)">Lora</button>
-        <button class="s-chip" data-font="'Source Serif 4',serif" onclick="setFont(this)">Source Serif</button>
-        <button class="s-chip" data-font="'Be Vietnam Pro',sans-serif" onclick="setFont(this)">Be Vietnam</button>
-      </div>
-    </div>
-    <div class="s-section">
-      <div class="s-label">Cỡ chữ</div>
-      <div class="s-slider-row">
-        <input type="range" class="s-slider" id="sizeSlider" min="14" max="28" value="19" oninput="setSize(this.value)">
-        <span class="s-val" id="sizeVal">19</span>
-      </div>
-    </div>
-    <div class="s-section">
-      <div class="s-label">Khoảng cách dòng</div>
-      <div class="s-slider-row">
-        <input type="range" class="s-slider" id="lhSlider" min="150" max="300" value="205" step="5" oninput="setLh(this.value)">
-        <span class="s-val" id="lhVal">2.05</span>
-      </div>
-    </div>
-    <div class="s-section">
-      <div class="s-label">Giao diện đọc</div>
-      <div class="s-row" style="gap:10px">
-        <button class="s-color active" style="background:#FFFBF7" data-bg="#FFFBF7" data-text="#3D2E26" onclick="setTheme(this)" title="Sáng"></button>
-        <button class="s-color" style="background:#F5EDD6" data-bg="#F5EDD6" data-text="#3A3020" onclick="setTheme(this)" title="Giấy cũ"></button>
-        <button class="s-color" style="background:#E8F0E8" data-bg="#E8F0E8" data-text="#2A3028" onclick="setTheme(this)" title="Xanh lá"></button>
-        <button class="s-color" style="background:#1C1814" data-bg="#1C1814" data-text="#D4CDC4" onclick="setTheme(this)" title="Nâu tối"></button>
-        <button class="s-color" style="background:#0c0a07" data-bg="#0c0a07" data-text="#e8e2d6" onclick="setTheme(this)" title="Đen"></button>
-      </div>
-    </div>
-    <div class="s-section">
-      <div class="s-label">Prompt tuỳ chỉnh (ghi đè phong cách)</div>
-      <textarea class="s-textarea" id="customPrompt" placeholder="Để trống = dùng phong cách đã chọn ở trên"></textarea>
-    </div>
-    <div class="s-section">
-      <div class="s-label">Thuật ngữ thủ công</div>
-      <textarea class="s-textarea" id="glossary" placeholder="萧炎 = Tiêu Viêm&#10;斗气 = Đấu Khí"></textarea>
-      <div class="s-foot">
-        <span>Kết hợp với Memory tự động</span>
-        <button class="s-link" onclick="clearTranslationCache()">Xóa cache dịch</button>
-      </div>
-    </div>
-  </div>
-  <div class="ch-nav" id="chNav">
-    <button class="nav-btn" id="prevBtn" onclick="nav(-1)">← Trước</button>
-    <span class="nav-title" id="navTitle"></span>
-    <button class="nav-btn" id="nextBtn" onclick="nav(1)">Sau →</button>
-  </div>
-  <div class="status-bar" id="statusBar"><div class="spinner"></div><span class="status-text" id="statusText"></span></div>
-  <div class="error-bar" id="errorBar"></div>
-  <div class="reader-area" id="readerArea">
-    <div class="reader-body" id="readerBody">
-      <div class="reader-empty">Chọn một chương để bắt đầu đọc</div>
-    </div>
+    <button class="ni-start" id="niStartBtn" onclick="enterReader()">Bắt đầu đọc</button>
+    <div class="ni-divider"></div>
+    <div class="ni-ch-title"><span>Danh sách chương</span><span id="niChCount"></span></div>
+    <div class="ni-ch-list" id="niChList"></div>
   </div>
 </div>
 
+<!-- ══ READER ══ -->
+<div id="readerScreen" class="screen">
+  <div class="topbar">
+    <img src="/static/logo.jpeg" class="tb-logo" onclick="goNovelInfo()" title="Thông tin truyện">
+    <span class="tb-title" id="tbTitle">—</span>
+    <span class="mem-badge" id="memBadge">⚡ Memory</span>
+    <button class="tb-btn" onclick="togglePanel('chPanel')" title="Mục lục">☰</button>
+    <button class="tb-btn" onclick="togglePanel('settingsDrawer')" title="Cài đặt">⚙</button>
+  </div>
+  <div class="ch-panel" id="chPanel"><div class="ch-head"><span id="chCount"></span></div><div class="ch-list" id="chList"></div></div>
+  <div class="settings-drawer" id="settingsDrawer">
+    <div class="s-section"><div class="s-label">Phông chữ</div><div class="s-row" id="fontPicker">
+      <button class="s-chip active" data-font="'Crimson Pro',serif" onclick="setFont(this)">Crimson</button>
+      <button class="s-chip" data-font="'Noto Serif',serif" onclick="setFont(this)">Noto Serif</button>
+      <button class="s-chip" data-font="'Lora',serif" onclick="setFont(this)">Lora</button>
+      <button class="s-chip" data-font="'Source Serif 4',serif" onclick="setFont(this)">Source Serif</button>
+      <button class="s-chip" data-font="'Be Vietnam Pro',sans-serif" onclick="setFont(this)">Be Vietnam</button>
+    </div></div>
+    <div class="s-section"><div class="s-label">Cỡ chữ</div><div class="s-slider-row"><input type="range" class="s-slider" id="sizeSlider" min="14" max="28" value="19" oninput="setSize(this.value)"><span class="s-val" id="sizeVal">19</span></div></div>
+    <div class="s-section"><div class="s-label">Dãn dòng</div><div class="s-slider-row"><input type="range" class="s-slider" id="lhSlider" min="150" max="300" value="205" step="5" oninput="setLh(this.value)"><span class="s-val" id="lhVal">2.05</span></div></div>
+    <div class="s-section"><div class="s-label">Nền</div><div class="s-row" style="gap:8px">
+      <button class="s-color active" style="background:#FFFBF7" data-bg="#FFFBF7" data-text="#3D2E26" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#F5EDD6" data-bg="#F5EDD6" data-text="#3A3020" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#E8F0E8" data-bg="#E8F0E8" data-text="#2A3028" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#1C1814" data-bg="#1C1814" data-text="#D4CDC4" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#0c0a07" data-bg="#0c0a07" data-text="#e8e2d6" onclick="setTheme(this)"></button>
+    </div></div>
+    <div class="s-section"><div class="s-label">Prompt tuỳ chỉnh</div><textarea class="s-textarea" id="customPrompt" placeholder="Để trống = dùng phong cách đã chọn"></textarea></div>
+    <div class="s-section"><div class="s-label">Thuật ngữ thủ công</div><textarea class="s-textarea" id="glossary" placeholder="萧炎 = Tiêu Viêm&#10;斗气 = Đấu Khí"></textarea><div class="s-foot"><span>Kết hợp Memory tự động</span><button class="s-link" onclick="clearCache()">Xóa cache dịch</button></div></div>
+  </div>
+  <div class="ch-nav" id="chNav"><button class="nav-btn" id="prevBtn" onclick="nav(-1)">← Trước</button><span class="nav-title" id="navTitle"></span><button class="nav-btn" id="nextBtn" onclick="nav(1)">Sau →</button></div>
+  <div class="status-bar" id="statusBar"><div class="spinner"></div><span class="status-text" id="statusText"></span></div>
+  <div class="error-bar" id="errorBar"></div>
+  <div class="reader-area" id="readerArea"><div class="reader-body" id="readerBody"><div class="reader-empty">Chọn một chương để bắt đầu đọc</div></div></div>
+</div>
+
 <script>
-let chapters=[], currentIdx=-1, translated={}, novelUrl='';
-let selectedStyle='nguyenban', memoryReady=false;
-const $=id=>document.getElementById(id);
-const LS=window.localStorage;
+let chapters=[], currentIdx=-1, translated={}, novelUrl='', novelTitle='';
+let selectedStyle='nguyenban', resumeChapter=-1;
+const $=id=>document.getElementById(id), LS=window.localStorage;
 
-/* ══════════ STYLE ══════════ */
-function pickStyle(el){ document.querySelectorAll('.l-styles-row .style-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); selectedStyle=el.dataset.style; syncStylePickers(); saveSettings(); }
-function pickReaderStyle(el){ document.querySelectorAll('#readerStylePicker .s-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); selectedStyle=el.dataset.style; syncStylePickers(); saveSettings(); }
-function syncStylePickers(){ document.querySelectorAll('.style-chip,#readerStylePicker .s-chip').forEach(c=>c.classList.toggle('active',c.dataset.style===selectedStyle)); }
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')}
 
-/* ══════════ PERSISTENCE ══════════ */
-function saveProgress(){ if(!novelUrl)return; const h=getHistory(); const ex=h.findIndex(x=>x.url===novelUrl); const e={url:novelUrl,chapter:currentIdx,title:chapters[currentIdx]?.title||'',time:Date.now()}; if(ex>=0)h[ex]=e;else h.unshift(e); LS.setItem('novel_history',JSON.stringify(h.slice(0,10))); }
-function getHistory(){ try{return JSON.parse(LS.getItem('novel_history')||'[]')}catch{return[]} }
-function saveSettings(){ LS.setItem('novel_settings',JSON.stringify({ font:getComputedStyle(document.documentElement).getPropertyValue('--r-font').trim(), size:$('sizeSlider').value, lh:$('lhSlider').value, bg:getComputedStyle(document.documentElement).getPropertyValue('--r-bg').trim(), text:getComputedStyle(document.documentElement).getPropertyValue('--r-text').trim(), glossary:$('glossary').value, prompt:$('customPrompt').value, style:selectedStyle })); }
-function loadSettings(){ try{ const s=JSON.parse(LS.getItem('novel_settings')); if(!s)return; if(s.font){document.documentElement.style.setProperty('--r-font',s.font);document.querySelectorAll('#fontPicker .s-chip').forEach(c=>c.classList.toggle('active',c.dataset.font===s.font))} if(s.size){$('sizeSlider').value=s.size;setSize(s.size)} if(s.lh){$('lhSlider').value=s.lh;setLh(s.lh)} if(s.bg){document.documentElement.style.setProperty('--r-bg',s.bg);document.documentElement.style.setProperty('--r-text',s.text);document.querySelectorAll('.s-color').forEach(c=>c.classList.toggle('active',c.dataset.bg===s.bg))} if(s.glossary)$('glossary').value=s.glossary; if(s.prompt)$('customPrompt').value=s.prompt; if(s.style){selectedStyle=s.style;syncStylePickers()} }catch{} }
+/* ══ STYLE ══ */
+function pickStyle(el){document.querySelectorAll('.style-chip').forEach(c=>c.classList.remove('active'));document.querySelectorAll(`.style-chip[data-style="${el.dataset.style}"]`).forEach(c=>c.classList.add('active'));selectedStyle=el.dataset.style;saveSettings()}
 
-/* ══════════ LANDING ══════════ */
-function renderHistory(){ const h=getHistory(); if(!h.length){$('historySection').style.display='none';return} $('historySection').style.display='block'; $('historyList').innerHTML=h.map((x,i)=>`<div class="l-hist-item" onclick="resumeNovel(${i})"><span class="l-hist-dot"></span><div class="l-hist-text"><div class="l-hist-url">${x.url}</div><div class="l-hist-ch">${x.title?'Ch.'+(x.chapter+1)+': '+x.title:'Chương '+(x.chapter+1)}</div></div><button class="l-hist-del" onclick="event.stopPropagation();delHist(${i})" title="Xóa">✕</button></div>`).join(''); }
-function delHist(i){ const h=getHistory(); h.splice(i,1); LS.setItem('novel_history',JSON.stringify(h)); renderHistory(); }
-async function resumeNovel(i){ const h=getHistory()[i]; if(!h)return; $('landingUrl').value=h.url; await startNovel(h.chapter); }
+/* ══ PERSISTENCE ══ */
+function saveProgress(){if(!novelUrl)return;const h=getHistory();const ex=h.findIndex(x=>x.url===novelUrl);const e={url:novelUrl,chapter:currentIdx,title:chapters[currentIdx]?.title||'',novelTitle,time:Date.now()};if(ex>=0)h[ex]=e;else h.unshift(e);LS.setItem('novel_history',JSON.stringify(h.slice(0,10)))}
+function getHistory(){try{return JSON.parse(LS.getItem('novel_history')||'[]')}catch{return[]}}
+function saveSettings(){LS.setItem('novel_settings',JSON.stringify({font:getComputedStyle(document.documentElement).getPropertyValue('--r-font').trim(),size:$('sizeSlider').value,lh:$('lhSlider').value,bg:getComputedStyle(document.documentElement).getPropertyValue('--r-bg').trim(),text:getComputedStyle(document.documentElement).getPropertyValue('--r-text').trim(),glossary:$('glossary').value,prompt:$('customPrompt').value,style:selectedStyle}))}
+function loadSettings(){try{const s=JSON.parse(LS.getItem('novel_settings'));if(!s)return;if(s.font){document.documentElement.style.setProperty('--r-font',s.font);document.querySelectorAll('#fontPicker .s-chip').forEach(c=>c.classList.toggle('active',c.dataset.font===s.font))}if(s.size){$('sizeSlider').value=s.size;setSize(s.size)}if(s.lh){$('lhSlider').value=s.lh;setLh(s.lh)}if(s.bg){document.documentElement.style.setProperty('--r-bg',s.bg);document.documentElement.style.setProperty('--r-text',s.text);document.querySelectorAll('.s-color').forEach(c=>c.classList.toggle('active',c.dataset.bg===s.bg))}if(s.glossary)$('glossary').value=s.glossary;if(s.prompt)$('customPrompt').value=s.prompt;if(s.style){selectedStyle=s.style;document.querySelectorAll('.style-chip').forEach(c=>c.classList.toggle('active',c.dataset.style===selectedStyle))}}catch{}}
 
-/* ══════════ MEMORY ══════════ */
-function updateMemBadge(stats){
-  const b=$('memBadge');
-  if(stats && (stats.characters>0 || stats.terms>0)){
-    b.textContent=`⚡ ${stats.characters} nhân vật · ${stats.terms} thuật ngữ`;
-    b.classList.add('on');
-  } else { b.classList.remove('on'); }
+/* ══ LANDING ══ */
+function renderHistory(){const h=getHistory();if(!h.length){$('historySection').style.display='none';return}$('historySection').style.display='block';$('historyList').innerHTML=h.map((x,i)=>`<div class="l-hist-item" onclick="resumeNovel(${i})"><span class="l-hist-dot"></span><div class="l-hist-text"><div class="l-hist-url">${x.novelTitle||x.url}</div><div class="l-hist-ch">${x.title?'Ch.'+(x.chapter+1)+': '+x.title:'Chương '+(x.chapter+1)}</div></div><button class="l-hist-del" onclick="event.stopPropagation();delHist(${i})" title="Xóa">✕</button></div>`).join('')}
+function delHist(i){const h=getHistory();h.splice(i,1);LS.setItem('novel_history',JSON.stringify(h));renderHistory()}
+async function resumeNovel(i){const h=getHistory()[i];if(!h)return;$('landingUrl').value=h.url;resumeChapter=h.chapter;await loadNovel()}
+
+/* ══ LOAD NOVEL ══ */
+async function loadNovel(){
+  const url=$('landingUrl').value.trim();if(!url)return;
+  novelUrl=url;$('landingBtn').disabled=true;
+  $('landingStatus').style.display='flex';$('landingStatusText').textContent='Đang tải mục lục...';
+  try{
+    const r=await fetch('/api/chapters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    chapters=d.chapters.map((ch,i)=>({...ch,idx:i}));translated={};
+    novelTitle=d.novel_title||url.replace(/https?:\/\/(www\.)?/,'').split('/').slice(0,2).join('/');
+
+    // Show novel info screen
+    $('niTitle').textContent=novelTitle;
+    $('niTitleVi').textContent='';
+    $('niStats').innerHTML=`<div class="ni-stat"><b>${chapters.length}</b> chương</div><div class="ni-stat">Chế độ: <b>${d.mode==='all_html'?'Toàn bộ (nhanh)':'Từng chương'}</b></div>`;
+    $('niChCount').textContent=chapters.length+' chương';
+    $('niChList').innerHTML=chapters.map((ch,i)=>`<div class="ni-ch" onclick="resumeChapter=${i};enterReader()"><span class="ni-ch-num">${i+1}</span><span class="ni-ch-name">${ch.title}</span></div>`).join('');
+
+    if(resumeChapter>=0){$('niStartBtn').textContent=`Tiếp tục đọc (Ch.${resumeChapter+1})`}
+    else{$('niStartBtn').textContent='Bắt đầu đọc'}
+
+    showScreen('novelInfo');
+
+    // Init memory in background
+    initMemory();
+  }catch(e){
+    $('landingStatusText').textContent='❌ '+e.message;
+    setTimeout(()=>{$('landingStatus').style.display='none'},5000);
+  }finally{$('landingBtn').disabled=false;$('landingStatus').style.display='none'}
 }
 
 async function initMemory(){
-  if(!novelUrl || !chapters.length) return;
-  showStatus('Đang khởi tạo bộ nhớ truyện...');
+  const niMem=$('niMem');
+  niMem.textContent='⏳ Đang khởi tạo Memory...';niMem.classList.add('on');
   try{
-    const r=await fetch('/api/init_memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({novel_url:novelUrl,chapters:chapters.slice(0,3)})});
+    const body={novel_url:novelUrl};
+    if(chapters.length)body.first_chapter_url=chapters[0].url;
+    const r=await fetch('/api/init_memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
-    if(d.memory) updateMemBadge(d.memory);
-    memoryReady=true;
-  }catch(e){ console.log('Memory init failed:',e); }
-  hideStatus();
+    if(d.memory){
+      const m=d.memory;
+      niMem.textContent=`⚡ Memory: ${m.characters} nhân vật · ${m.places} địa danh · ${m.terms} thuật ngữ`;
+      if(m.novel_title_vi)$('niTitleVi').textContent=m.novel_title_vi;
+      if(m.genre)$('niStats').innerHTML+=`<div class="ni-stat">${m.genre}</div>`;
+      updateMemBadge(m);
+    }
+  }catch(e){niMem.textContent='Memory: chưa khởi tạo'}
 }
 
-/* ══════════ START ══════════ */
-async function startNovel(resumeIdx){
-  const url=$('landingUrl').value.trim(); if(!url)return;
-  novelUrl=url; $('landingBtn').disabled=true;
-  $('landingStatus').style.display='flex'; $('landingStatusText').textContent='Đang tải mục lục...';
-  try{
-    const r=await fetch('/api/chapters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.error);
-    chapters=d.chapters; translated={};
-    $('landing').style.display='none'; $('readerScreen').style.display='flex';
-    $('chCount').textContent=chapters.length+' chương';
-    $('tbTitle').textContent=url.replace(/https?:\/\/(www\.)?/,'').split('/').slice(0,2).join('/');
-    renderCh();
-    // Initialize memory in background
-    initMemory();
-    if(typeof resumeIdx==='number'&&resumeIdx>=0&&resumeIdx<chapters.length) openCh(resumeIdx);
-  }catch(e){
-    $('landingStatusText').textContent='❌ '+e.message;
-    $('landingStatus').querySelector('.spinner').style.display='none';
-    setTimeout(()=>{$('landingStatus').style.display='none';$('landingStatus').querySelector('.spinner').style.display='block'},6000);
-  }finally{$('landingBtn').disabled=false}
+function updateMemBadge(m){const b=$('memBadge');if(m&&(m.characters>0||m.terms>0)){b.textContent=`⚡ ${m.characters} NV · ${m.terms} TN`;b.classList.add('on')}else{b.classList.remove('on')}}
+
+/* ══ ENTER READER ══ */
+function enterReader(){
+  showScreen('readerScreen');
+  $('chCount').textContent=chapters.length+' chương';
+  $('tbTitle').textContent=novelTitle;
+  renderCh();
+  const idx=resumeChapter>=0?resumeChapter:0;
+  resumeChapter=-1;
+  openCh(idx);
 }
 
-/* ══════════ READER ══════════ */
+/* ══ READER LOGIC ══ */
 function showStatus(m){$('statusBar').classList.add('on');$('statusText').textContent=m}
 function hideStatus(){$('statusBar').classList.remove('on')}
 function showError(m){$('errorBar').classList.add('on');$('errorBar').textContent=m}
 function hideError(){$('errorBar').classList.remove('on')}
-function togglePanel(id){ const el=$(id),open=el.classList.contains('open'); document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open')); if(!open)el.classList.add('open'); }
-function renderCh(){ $('chList').innerHTML=chapters.map((ch,i)=>`<div class="ch-item ${i===currentIdx?'active':''}" onclick="openCh(${i})"><span class="ch-num">${i+1}</span><span class="ch-dot ${translated[i]?'done':i===currentIdx?'busy':''}" id="dot${i}"></span><span class="ch-title">${ch.title}</span>${translated[i]?'<span class="ch-ok">✓</span>':''}</div>`).join(''); }
+function togglePanel(id){const el=$(id),open=el.classList.contains('open');document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open'));if(!open)el.classList.add('open')}
+function renderCh(){$('chList').innerHTML=chapters.map((ch,i)=>`<div class="ch-item ${i===currentIdx?'active':''}" onclick="openCh(${i})"><span class="ch-num">${i+1}</span><span class="ch-dot ${translated[i]?'done':i===currentIdx?'busy':''}" id="dot${i}"></span><span class="ch-title">${ch.title}</span>${translated[i]?'<span class="ch-ok">✓</span>':''}</div>`).join('')}
 
 async function openCh(i){
-  currentIdx=i; renderCh(); hideError();
-  $('chNav').classList.add('open'); $('navTitle').textContent=chapters[i].title;
-  $('prevBtn').disabled=i<=0; $('nextBtn').disabled=i>=chapters.length-1;
+  currentIdx=i;renderCh();hideError();
+  $('chNav').classList.add('open');$('navTitle').textContent=chapters[i].title;
+  $('prevBtn').disabled=i<=0;$('nextBtn').disabled=i>=chapters.length-1;
   document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open'));
   saveProgress();
   if(translated[i]){renderText(translated[i]);return}
-  $('readerBody').innerHTML='<div class="reader-empty"><div class="spinner"></div><span>Đang dịch chương...</span></div>';
+  $('readerBody').innerHTML='<div class="reader-empty"><div class="spinner"></div><span>Đang dịch...</span></div>';
   showStatus('Đang dịch: '+chapters[i].title);
-  const dot=$(`dot${i}`); if(dot)dot.className='ch-dot busy';
+  const dot=$(`dot${i}`);if(dot)dot.className='ch-dot busy';
   try{
     const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:chapters[i].url, novel_url:novelUrl, glossary:$('glossary').value, style:selectedStyle, custom_prompt:$('customPrompt').value})});
-    const d=await r.json(); hideStatus();
+      body:JSON.stringify({url:chapters[i].url,novel_url:novelUrl,glossary:$('glossary').value,style:selectedStyle,custom_prompt:$('customPrompt').value})});
+    const d=await r.json();hideStatus();
     if(!r.ok){showError(d.error);if(dot)dot.className='ch-dot';return}
-    translated[i]=d.translation; if(dot)dot.className='ch-dot done';
-    if(d.memory_stats) updateMemBadge(d.memory_stats);
-    renderText(d.translation); renderCh();
+    translated[i]=d.translation;if(dot)dot.className='ch-dot done';
+    if(d.memory)updateMemBadge(d.memory);
+    renderText(d.translation);renderCh();
   }catch(e){hideStatus();showError(e.message);if(dot)dot.className='ch-dot'}
 }
 
 function renderText(text){
   let html=text.split(/\n+/).filter(p=>p.trim()).map(p=>`<p>${p}</p>`).join('');
-  if(currentIdx>=0&&currentIdx<chapters.length-1) html+=`<button class="next-btn" onclick="nav(1)">Chương tiếp theo →</button>`;
-  $('readerBody').innerHTML=html; $('readerArea').scrollTop=0; window.scrollTo({top:0,behavior:'smooth'});
+  if(currentIdx>=0&&currentIdx<chapters.length-1)html+=`<button class="next-btn" onclick="nav(1)">Chương tiếp theo →</button>`;
+  $('readerBody').innerHTML=html;window.scrollTo({top:0,behavior:'smooth'});
 }
 function nav(d){const n=currentIdx+d;if(n>=0&&n<chapters.length)openCh(n)}
-function goHome(){$('readerScreen').style.display='none';$('landing').style.display='flex';renderHistory()}
+function goLanding(){showScreen('landing');renderHistory()}
+function goNovelInfo(){showScreen('novelInfo')}
 
-/* ══════════ SETTINGS ══════════ */
+/* ══ SETTINGS ══ */
 function setFont(el){document.querySelectorAll('#fontPicker .s-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');document.documentElement.style.setProperty('--r-font',el.dataset.font);saveSettings()}
 function setSize(v){document.documentElement.style.setProperty('--r-size',v+'px');$('sizeVal').textContent=v;saveSettings()}
 function setLh(v){const lh=(v/100).toFixed(2);document.documentElement.style.setProperty('--r-lh',lh);$('lhVal').textContent=lh;saveSettings()}
 function setTheme(el){document.querySelectorAll('.s-color').forEach(c=>c.classList.remove('active'));el.classList.add('active');document.documentElement.style.setProperty('--r-bg',el.dataset.bg);document.documentElement.style.setProperty('--r-text',el.dataset.text);saveSettings()}
-function clearTranslationCache(){translated={};renderCh()}
+function clearCache(){translated={};renderCh()}
 $('glossary')?.addEventListener('input',saveSettings);
 $('customPrompt')?.addEventListener('input',saveSettings);
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;if(e.key==='ArrowLeft')nav(-1);if(e.key==='ArrowRight')nav(1)});
 
-loadSettings(); renderHistory();
+loadSettings();renderHistory();
 </script>
 </body>
 </html>
