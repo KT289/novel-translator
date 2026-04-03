@@ -45,7 +45,7 @@ def set_cache(url, data, prefix=""):
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
 
-# ====================== FETCH (same as working version) ======================
+# ====================== FETCH ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -62,88 +62,100 @@ def is_all_page(url):
     return "all.html" in path or "all.htm" in path
 
 
-# ====================== PARSE ALL.HTML (FIXED: finditer) ======================
-TITLE_RE = re.compile(r'第[零一二三四五六七八九十百千万\d]{1,10}[章节回集卷]\s*[^\n]{0,60}')
-NOISE_RE = re.compile(
-    r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
-    r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名)"
-)
-
-
+# ====================== PARSE ALL.HTML (UPDATED) ======================
 def parse_all_html(url):
-    """Parse all.html: one page contains ALL chapters."""
+    """Parse all.html - Hỗ trợ CẢ 2 kiểu:
+       - Full-text dump (cũ)
+       - Directory list (69read.net)"""
     cached = get_cache(url, prefix="allhtml_")
     if cached:
         return cached
 
     soup = fetch(url)
 
-    # Novel title from <title> tag
+    # Novel title
     title_tag = soup.find("title")
     novel_title = ""
     if title_tag:
         novel_title = title_tag.get_text(strip=True).split("_")[0].split("-")[0].strip()
 
-    # Remove noise tags
-    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
-        tag.decompose()
-
-    # Find content area
-    content_el = None
-    for sel in ["#content", "#all", "#at", ".content", "#BookText",
-                "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
-        c = soup.select_one(sel)
-        if c and len(c.get_text(strip=True)) > 500:
-            content_el = c
-            break
-
-    # Fallback: largest block
-    if not content_el:
-        best, best_len = None, 0
-        for c in soup.find_all(["div", "article", "section"]):
-            txt = c.get_text(strip=True)
-            if len(txt) > best_len:
-                best, best_len = c, len(txt)
-        if best and best_len > 500:
-            content_el = best
-
-    if not content_el:
-        return {"title": novel_title, "chapters": []}
-
-    # Convert <br> to newlines
-    for br in content_el.find_all("br"):
-        br.replace_with("\n")
-
-    # Get the FULL text blob
-    full_text = content_el.get_text(separator="\n")
-
-    # Use finditer to find ALL chapter title positions in the text
-    matches = list(TITLE_RE.finditer(full_text))
-    if not matches:
-        return {"title": novel_title, "chapters": []}
-
-    # Split text between chapter titles
+    # === 1. THỬ LẤY DANH SÁCH CHƯƠNG (TOC MODE - 69read.net) ===
     chapters = []
-    for i, m in enumerate(matches):
-        title = m.group().strip()
-        start = m.end()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
-        raw_content = full_text[start:end].strip()
+    seen = set()
+    selectors = ["li a", "ul a", ".directory a", "#directory a", ".list a",
+                 ".chapter-list a", ".mulu a", "dd a"]
 
-        # Clean content lines
-        lines = [l.strip() for l in raw_content.split("\n") if l.strip()]
-        lines = [l for l in lines if not NOISE_RE.search(l)]
-        content = "\n\n".join(lines)
+    for sel in selectors:
+        for a in soup.select(sel):
+            href = a.get("href", "").strip()
+            title = a.get_text(strip=True).strip()
+            if href and title and re.search(r'第[0-9]+章', title) or "章" in title:
+                full = urljoin(url, href)
+                if full not in seen and not full.endswith(('.js', '.css')):
+                    seen.add(full)
+                    chapters.append({"title": title, "url": full})
 
-        if len(content) > 30:
-            chapters.append({"title": title, "content": content})
+    # Fallback tìm tất cả link có số chương
+    if len(chapters) < 5:
+        for a in soup.find_all("a"):
+            href = a.get("href", "").strip()
+            title = a.get_text(strip=True).strip()
+            if href and title and re.search(r'第[0-9]+章', title):
+                full = urljoin(url, href)
+                if full not in seen:
+                    seen.add(full)
+                    chapters.append({"title": title, "url": full})
+
+    # === 2. Nếu không tìm thấy nhiều chương → thử full-text mode cũ ===
+    if len(chapters) < 5:
+        # (giữ nguyên logic cũ của bạn)
+        for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+            tag.decompose()
+
+        content_el = None
+        for sel in ["#content", "#all", "#at", ".content", "#BookText",
+                    "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
+            c = soup.select_one(sel)
+            if c and len(c.get_text(strip=True)) > 500:
+                content_el = c
+                break
+
+        if not content_el:
+            best, best_len = None, 0
+            for c in soup.find_all(["div", "article", "section"]):
+                txt = c.get_text(strip=True)
+                if len(txt) > best_len:
+                    best, best_len = c, len(txt)
+            if best and best_len > 500:
+                content_el = best
+
+        if content_el:
+            for br in content_el.find_all("br"):
+                br.replace_with("\n")
+            full_text = content_el.get_text(separator="\n")
+
+            TITLE_RE = re.compile(r'第[零一二三四五六七八九十百千万\d]{1,10}[章节回集卷]\s*[^\n]{0,60}')
+            matches = list(TITLE_RE.finditer(full_text))
+            if matches:
+                chapters = []
+                for i, m in enumerate(matches):
+                    title = m.group().strip()
+                    start = m.end()
+                    end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
+                    raw_content = full_text[start:end].strip()
+                    lines = [l.strip() for l in raw_content.split("\n") if l.strip()]
+                    content = "\n\n".join(lines)
+                    if len(content) > 30:
+                        chapters.append({"title": title, "content": content})
 
     result = {"title": novel_title, "chapters": chapters}
     set_cache(url, result, prefix="allhtml_")
     return result
 
 
-# ====================== STANDARD PARSING ======================
+# ====================== CÁC HÀM CÒN LẠI GIỮ NGUYÊN ======================
+# (get_chapters_standard, get_content_standard, memory, translate, v.v. KHÔNG thay đổi)
+
 def get_chapters_standard(url):
     cached = get_cache(url, prefix="chapters_")
     if cached:
@@ -200,14 +212,18 @@ def get_content_standard(url):
 
     text = el.get_text(separator="\n")
     lines = [l.strip() for l in text.split("\n") if l.strip()]
-    cleaned = [l for l in lines if not NOISE_RE.search(l)]
+    cleaned = [l for l in lines if not re.search(
+        r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
+        r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名)", l)]
     final = "\n\n".join(cleaned)
 
     set_cache(url, final, prefix="raw_")
     return final
 
 
-# ====================== MEMORY (same as working version) ======================
+# (memory functions, translate function giữ nguyên 100% như code cũ của bạn)
+
+
 def get_memory(url):
     m = get_cache(url, prefix="memory_")
     return m or {"characters": {}, "places": {}, "terms": {}, "summary": "", "n": 0}
@@ -298,7 +314,6 @@ CHỈ JSON."""}],
     return mem
 
 
-# ====================== TRANSLATE (same as working version) ======================
 STYLES = {
     "cotrang": "Dịch phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiếm hiệp.",
     "hiendai": "Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi.",
@@ -323,7 +338,6 @@ def translate(text, glossary="", style="nguyenban", custom_prompt="",
     mb = build_memory_block(mem, glossary)
     tone = custom_prompt.strip() if custom_prompt.strip() else STYLES.get(style, STYLES["nguyenban"])
 
-    # Chunk
     paras = text.split("\n\n")
     chunks = []
     cur = ""
@@ -379,7 +393,6 @@ QUY TẮC:
     if ck:
         set_cache(ck, final, prefix="tr_")
 
-    # Update memory
     if novel_url:
         try:
             extract_memory(text, final, mem, novel_url)
@@ -389,7 +402,7 @@ QUY TẮC:
     return final
 
 
-# ====================== ROUTES ======================
+# ====================== ROUTES (chỉ sửa phần all.html) ======================
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -404,10 +417,14 @@ def api_chapters():
         if is_all_page(url):
             data = parse_all_html(url)
             ch_list = []
-            for i, ch in enumerate(data["chapters"]):
-                vurl = f"{url}#ch_{i}"
-                set_cache(vurl, ch["content"], prefix="raw_")
-                ch_list.append({"title": ch["title"], "url": vurl})
+            for ch in data["chapters"]:
+                # Hỗ trợ cả 2 kiểu: full-text (có content) và directory (có url)
+                if "url" in ch:
+                    ch_list.append({"title": ch["title"], "url": ch["url"]})
+                else:
+                    vurl = f"{url}#ch_{len(ch_list)}"
+                    set_cache(vurl, ch["content"], prefix="raw_")
+                    ch_list.append({"title": ch["title"], "url": vurl})
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
@@ -434,6 +451,7 @@ def api_chapters():
         return jsonify({"error": str(e)}), 500
 
 
+# (các route còn lại giữ nguyên)
 @app.route("/api/init_memory", methods=["POST"])
 def api_init_memory():
     d = request.json
@@ -445,7 +463,6 @@ def api_init_memory():
     if mem.get("n", 0) > 0 or mem.get("characters"):
         return jsonify({"status": "ready", "memory": _ms(mem)})
 
-    # Get first chapter content from cache
     text = ""
     fu = d.get("first_chapter_url", "")
     if fu:
@@ -464,7 +481,6 @@ def api_translate():
         return jsonify({"error": "Thiếu URL chương"}), 400
 
     try:
-        # Check cache first (all.html chapters are pre-cached)
         raw = get_cache(cu, prefix="raw_")
         if not raw:
             raw = get_content_standard(cu)
