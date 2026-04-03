@@ -72,54 +72,56 @@ def fetch(url):
     r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=60)
     if r.status_code != 200:
         raise Exception(f"HTTP {r.status_code}")
-    time.sleep(0.8)  # Giảm rate limit
+    time.sleep(0.8)
     return BeautifulSoup(r.content, "lxml")
 
 def is_all_page(url):
     path = urlparse(url).path.lower()
     return "all.html" in path or "all.htm" in path
 
-# ====================== PARSE ALL.HTML (69SHUBA SUPPORT) ======================
-def parse_all_html(url):
-    cached = get_cache(url, prefix="allhtml_")
+# ====================== PARSE CATALOG (69SHUBA BOOK PAGE) ======================
+def parse_catalog(url):
+    """Đặc biệt dành cho trang https://www.69shuba.com/book/51230/"""
+    cached = get_cache(url, prefix="catalog_")
     if cached:
         return cached
 
     soup = fetch(url)
 
+    # Novel title
     title_tag = soup.find("title")
     novel_title = ""
     if title_tag:
         novel_title = title_tag.get_text(strip=True).split("_")[0].split("-")[0].strip()
 
-    # === 1. LẤY DANH SÁCH CHƯƠNG TỪ all.html ===
     chapters = []
     seen = set()
 
-    # Tìm tất cả link chứa "章"
-    for a in soup.find_all("a"):
-        href = a.get("href", "").strip()
-        title = a.get_text(strip=True).strip()
-        if href and title and re.search(r'第.*[章回]', title):
-            full_url = urljoin(url, href)
-            if full_url not in seen:
-                seen.add(full_url)
-                chapters.append({"title": title, "url": full_url})
+    # 1. Tìm trong #catalog (cấu trúc chính của trang book/)
+    catalog = soup.select_one("#catalog") or soup.select_one(".catalog")
+    if catalog:
+        for a in catalog.find_all("a"):
+            href = a.get("href", "").strip()
+            title = a.get_text(strip=True).strip()
+            if href and title and re.search(r'第.*[章回]', title):
+                full = urljoin(url, href)
+                if full not in seen:
+                    seen.add(full)
+                    chapters.append({"title": title, "url": full})
 
-    if len(chapters) < 5:
-        # Fallback selectors
-        for sel in ["li a", ".list a", "dd a", "ul a"]:
-            for a in soup.select(sel):
-                href = a.get("href", "").strip()
-                title = a.get_text(strip=True).strip()
-                if href and title and "章" in title:
-                    full_url = urljoin(url, href)
-                    if full_url not in seen:
-                        seen.add(full_url)
-                        chapters.append({"title": title, "url": full_url})
+    # 2. Fallback: tìm tất cả link có số chương
+    if len(chapters) < 10:
+        for a in soup.find_all("a"):
+            href = a.get("href", "").strip()
+            title = a.get_text(strip=True).strip()
+            if href and title and re.search(r'第.*[章回]', title):
+                full = urljoin(url, href)
+                if full not in seen:
+                    seen.add(full)
+                    chapters.append({"title": title, "url": full})
 
     result = {"title": novel_title, "chapters": chapters}
-    set_cache(url, result, prefix="allhtml_")
+    set_cache(url, result, prefix="catalog_")
     return result
 
 # ====================== STANDARD FUNCTIONS ======================
@@ -132,6 +134,7 @@ def get_chapters_standard(url):
     selectors = [
         "#list a", ".listmain a", ".chapter-list a", ".mulu a",
         "#chapterList a", "dd a", ".book-list a", ".chapters a",
+        ".catalog a", "#catalog a", "ul li a", ".catalog ul li a"
     ]
     links = []
     for sel in selectors:
@@ -158,7 +161,7 @@ def get_content_standard(url):
 
     soup = fetch(url)
 
-    # 69SHUBA SPECIAL PARSING
+    # 69SHUBA CHAPTER SPECIAL PARSING
     if "69shuba.com" in url or "69read.net" in url:
         el = soup.select_one(".txtnav")
         if el:
@@ -205,7 +208,7 @@ def get_content_standard(url):
     set_cache(url, final, prefix="raw_")
     return final
 
-# ====================== MEMORY ======================
+# ====================== MEMORY (GIỮ NGUYÊN) ======================
 def get_memory(url):
     m = get_cache(url, prefix="memory_")
     return m or {"characters": {}, "places": {}, "terms": {}, "summary": "", "n": 0}
@@ -291,7 +294,7 @@ CHỈ JSON."""}],
         print(f"Memory init error: {e}")
     return mem
 
-# ====================== TRANSLATE ======================
+# ====================== TRANSLATE (GIỮ NGUYÊN) ======================
 STYLES = {
     "cotrang": "Dịch phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiếm hiệp.",
     "hiendai": "Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi.",
@@ -390,8 +393,19 @@ def api_chapters():
     if not url:
         return jsonify({"error": "Vui lòng nhập URL"}), 400
     try:
-        if is_all_page(url):
-            data = parse_all_html(url)
+        # Nếu là trang catalog của 69shuba.com/book/XXXXX thì dùng parser đặc biệt
+        if "69shuba.com/book/" in url or "69read.net/book/" in url:
+            data = parse_catalog(url)
+            ch_list = []
+            for ch in data["chapters"]:
+                ch_list.append({"title": ch["title"], "url": ch["url"]})
+            return jsonify({
+                "chapters": ch_list,
+                "novel_title": data.get("title", ""),
+                "mode": "catalog",
+            })
+        elif is_all_page(url):
+            data = parse_catalog(url)  # fallback
             ch_list = []
             for ch in data["chapters"]:
                 ch_list.append({"title": ch["title"], "url": ch["url"]})
