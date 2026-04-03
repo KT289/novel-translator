@@ -23,7 +23,7 @@ AI_CLIENT = OpenAI(
     api_key=GEMINI_API_KEY,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
 )
-MODEL = "gemini-2.5-flash-lite"
+MODEL = "gemini-3.1-flash-lite"
 
 CACHE = Path("cache")
 CACHE.mkdir(exist_ok=True)
