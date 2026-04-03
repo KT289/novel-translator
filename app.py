@@ -45,7 +45,7 @@ def set_cache(url, data, prefix=""):
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
 
-# ====================== FETCH (ANTI-503) ======================
+# ====================== FETCH ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -64,16 +64,15 @@ def is_all_page(url):
     return "all.html" in path or "all.htm" in path
 
 
-# ====================== PARSE CATALOG (MỚI - CHO /book/51230/) ======================
+# ====================== PARSE CATALOG (CHO /book/51230/) ======================
 def parse_catalog(url):
-    """Hỗ trợ trang catalog https://www.69shuba.com/book/51230/"""
+    """Tối ưu mạnh cho trang https://www.69shuba.com/book/51230/"""
     cached = get_cache(url, prefix="catalog_")
     if cached:
         return cached
 
     soup = fetch(url)
 
-    # Novel title
     title_tag = soup.find("title")
     novel_title = ""
     if title_tag:
@@ -82,7 +81,7 @@ def parse_catalog(url):
     chapters = []
     seen = set()
 
-    # Tìm trong #catalog (cấu trúc chính của 69shuba)
+    # 1. Tìm trong #catalog (cấu trúc chính)
     catalog = soup.select_one("#catalog") or soup.select_one(".catalog")
     if catalog:
         for a in catalog.find_all("a"):
@@ -94,12 +93,12 @@ def parse_catalog(url):
                     seen.add(full)
                     chapters.append({"title": title, "url": full})
 
-    # Fallback: tìm tất cả link có số chương
-    if len(chapters) < 20:
+    # 2. Fallback siêu mạnh: tất cả link chứa /txt/ và có "第"
+    if len(chapters) < 50:
         for a in soup.find_all("a"):
             href = a.get("href", "").strip()
             title = a.get_text(strip=True).strip()
-            if href and title and re.search(r'第.*[章回]', title):
+            if href and "/txt/" in href and re.search(r'第.*[章回]', title):
                 full = urljoin(url, href)
                 if full not in seen:
                     seen.add(full)
@@ -130,12 +129,12 @@ def parse_all_html(url):
     if title_tag:
         novel_title = title_tag.get_text(strip=True).split("_")[0].split("-")[0].strip()
 
-    # Remove noise
     for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
         tag.decompose()
 
     content_el = None
-    for sel in ["#content", "#all", "#at", ".content", "#BookText", "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
+    for sel in ["#content", "#all", "#at", ".content", "#BookText",
+                "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
         c = soup.select_one(sel)
         if c and len(c.get_text(strip=True)) > 500:
             content_el = c
@@ -169,7 +168,7 @@ def parse_all_html(url):
     return result
 
 
-# ====================== CÁC HÀM CÒN LẠI GIỮ NGUYÊN 100% ======================
+# ====================== CÁC HÀM CÒN LẠI GIỮ NGUYÊN HOÀN TOÀN ======================
 def get_chapters_standard(url):
     cached = get_cache(url, prefix="chapters_")
     if cached:
@@ -214,9 +213,8 @@ def get_content_standard(url):
         if el:
             for bad in el.select(".txtinfo, .yueduad1, .bottom-ad, .bottom-ad2, .page1, #txtright, .tools, script, style, header, footer, nav"):
                 bad.decompose()
-            h1 = el.find("h1")
-            if h1:
-                h1.decompose()
+            if el.find("h1"):
+                el.find("h1").decompose()
             for br in el.find_all("br"):
                 br.replace_with("\n")
             text = el.get_text(separator="\n")
@@ -227,7 +225,7 @@ def get_content_standard(url):
                 set_cache(url, final, prefix="raw_")
                 return final
 
-    # FALLBACK GỐC
+    # FALLBACK
     for t in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
         t.decompose()
 
@@ -254,15 +252,13 @@ def get_content_standard(url):
     return final
 
 
-# ====================== MEMORY, TRANSLATE, ROUTES (GIỮ NGUYÊN) ======================
+# ====================== MEMORY & TRANSLATE (GIỮ NGUYÊN) ======================
 def get_memory(url):
     m = get_cache(url, prefix="memory_")
     return m or {"characters": {}, "places": {}, "terms": {}, "summary": "", "n": 0}
 
-
 def save_memory(url, m):
     set_cache(url, m, prefix="memory_")
-
 
 def build_memory_block(mem, glossary=""):
     terms = {}
@@ -279,7 +275,6 @@ def build_memory_block(mem, glossary=""):
     if mem.get("summary"):
         parts.append(f"【BỐI CẢNH】 {mem['summary']}")
     return "\n\n".join(parts)
-
 
 def extract_memory(cn, vn, mem, url):
     try:
@@ -306,7 +301,6 @@ CHỈ JSON."""}],
     except Exception as e:
         print(f"Memory extract error: {e}")
     return mem
-
 
 def init_memory(url, text):
     mem = get_memory(url)
@@ -344,7 +338,6 @@ CHỈ JSON."""}],
         print(f"Memory init error: {e}")
     return mem
 
-
 STYLES = {
     "cotrang": "Dịch phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiếm hiệp.",
     "hiendai": "Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi.",
@@ -352,7 +345,6 @@ STYLES = {
     "satnghia": "Dịch sát nghĩa, chính xác từng câu.",
     "nguyenban": "Giữ nguyên phong cách gốc, cân bằng chính xác và tự nhiên.",
 }
-
 
 def translate(text, glossary="", style="nguyenban", custom_prompt="",
              chapter_url="", novel_url=""):
@@ -445,18 +437,14 @@ def api_chapters():
     if not url:
         return jsonify({"error": "Vui lòng nhập URL"}), 400
     try:
-        # TRANG CATALOG MỚI
         if "69shuba.com/book/" in url or "69read.net/book/" in url:
             data = parse_catalog(url)
-            ch_list = []
-            for ch in data["chapters"]:
-                ch_list.append({"title": ch["title"], "url": ch["url"]})
+            ch_list = [{"title": ch["title"], "url": ch["url"]} for ch in data["chapters"]]
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
                 "mode": "catalog",
             })
-        # TRANG ALL.HTML
         elif is_all_page(url):
             data = parse_all_html(url)
             ch_list = []
@@ -469,7 +457,6 @@ def api_chapters():
                 "novel_title": data.get("title", ""),
                 "mode": "all_html",
             })
-        # TRANG THƯỜNG
         else:
             chs = get_chapters_standard(url)
             if not chs:
@@ -491,7 +478,6 @@ def api_chapters():
         return jsonify({"error": str(e)}), 500
 
 
-# (các route init_memory, translate, _ms giữ nguyên như code gốc của bạn)
 @app.route("/api/init_memory", methods=["POST"])
 def api_init_memory():
     d = request.json
