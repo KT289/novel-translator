@@ -10,8 +10,7 @@
   --bg:#F2F8F5;--surface:#EAF3EE;--surface2:#DFF0E6;--surface3:#D4E8DC;
   --jade:#4A9E7E;--jade-lt:#6CBEAA;--jade-dk:#357A5E;--jade-bg:#4A9E7E08;--jade-bg2:#4A9E7E15;
   --text:#1C3830;--text2:#4A6E5F;--text3:#8BB0A0;
-  --rule:#CBE0D4;--rule2:#BCD5C8;
-  --green:#4A9E7E;--red:#C27050;
+  --rule:#CBE0D4;--rule2:#BCD5C8;--green:#4A9E7E;--red:#C27050;
   --r-bg:#F2F8F5;--r-text:#1C3830;--r-font:'Lora',serif;--r-size:19px;--r-lh:2.05;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -19,19 +18,18 @@ html{font-size:16px;-webkit-font-smoothing:antialiased}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh;flex-direction:column}.screen.active{display:flex}
 
-/* ══ LANDING ══ */
+/* LANDING */
 #landing{align-items:center;justify-content:center;padding:40px 24px;position:relative}
 #landing::before{content:'';position:absolute;top:-12%;right:-8%;width:500px;height:500px;background:radial-gradient(circle,#4A9E7E0D 0%,transparent 65%);pointer-events:none}
-#landing::after{content:'';position:absolute;bottom:-8%;left:-5%;width:380px;height:380px;background:radial-gradient(circle,#4A9E7E08 0%,transparent 65%);pointer-events:none}
 .l-logo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid var(--rule);box-shadow:0 4px 28px rgba(74,158,126,0.12);margin-bottom:22px;z-index:1}
-.l-title{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;color:var(--text);letter-spacing:-0.5px;margin-bottom:6px;z-index:1}
-.l-sub{font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:var(--text3);margin-bottom:38px;z-index:1;font-weight:400}
+.l-title{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;color:var(--text);margin-bottom:6px;z-index:1}
+.l-sub{font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:var(--text3);margin-bottom:38px;z-index:1}
 .l-input-row{display:flex;gap:10px;width:100%;max-width:540px;z-index:1}
 .l-input{flex:1;padding:14px 18px;background:#fff;border:1.5px solid var(--rule);border-radius:14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:all .3s;box-shadow:0 1px 4px rgba(74,158,126,0.04)}
 .l-input:focus{border-color:var(--jade-lt);box-shadow:0 0 0 3px var(--jade-bg2)}
 .l-input::placeholder{color:var(--text3)}
 .l-btn{padding:0 26px;background:var(--jade);color:#fff;border:none;border-radius:14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .25s;white-space:nowrap;box-shadow:0 2px 14px rgba(74,158,126,0.25)}
-.l-btn:hover{background:var(--jade-dk);transform:translateY(-1px);box-shadow:0 4px 20px rgba(74,158,126,0.3)}
+.l-btn:hover{background:var(--jade-dk);transform:translateY(-1px)}
 .l-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
 .l-styles{margin-top:18px;width:100%;max-width:540px;z-index:1}
 .l-styles-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;text-align:center}
@@ -43,46 +41,45 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .l-history{margin-top:30px;width:100%;max-width:540px;z-index:1}
 .l-history-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .l-hist-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:#fff;border:1px solid var(--rule);border-radius:12px;margin-bottom:5px;cursor:pointer;transition:all .2s;box-shadow:0 1px 3px rgba(74,158,126,0.03)}
-.l-hist-item:hover{border-color:var(--jade-lt);box-shadow:0 2px 12px rgba(74,158,126,0.08)}
+.l-hist-item:hover{border-color:var(--jade-lt)}
 .l-hist-dot{width:5px;height:5px;border-radius:50%;background:var(--jade-lt);flex-shrink:0}
-.l-hist-text{flex:1;overflow:hidden}
-.l-hist-url{font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.l-hist-text{flex:1;overflow:hidden}.l-hist-url{font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .l-hist-ch{font-size:10px;color:var(--text3);margin-top:1px}
 .l-hist-del{background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;padding:4px;opacity:.4;transition:opacity .2s}
 .l-hist-del:hover{opacity:1;color:var(--red)}
 
-/* ══ NOVEL INFO ══ */
+/* NOVEL INFO */
 #novelInfo{align-items:center;padding:40px 24px 60px}
-.ni-card{width:100%;max-width:600px;background:#fff;border-radius:20px;padding:32px 28px;box-shadow:0 2px 24px rgba(74,158,126,0.06);border:1px solid var(--rule)}
-.ni-back{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;padding:0}
-.ni-back:hover{color:var(--jade)}
-.ni-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.3}
-.ni-title-vi{font-size:13px;color:var(--text2);margin-bottom:16px;font-style:italic;font-family:'Cormorant Garamond',serif}
-.ni-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.ni-stat{padding:5px 12px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;font-size:11px;color:var(--text2)}
-.ni-stat b{color:var(--text);font-weight:500}
-.ni-mem{padding:8px 14px;background:var(--jade-bg2);border:1px solid var(--jade-lt);border-radius:10px;font-size:11px;color:var(--jade-dk);display:none;margin-bottom:16px}
-.ni-mem.on{display:block}
+.ni-card{width:100%;max-width:640px;background:#fff;border-radius:20px;padding:32px 28px;box-shadow:0 2px 24px rgba(74,158,126,0.06);border:1px solid var(--rule)}
+.ni-back{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;padding:0}.ni-back:hover{color:var(--jade)}
+.ni-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--text);margin-bottom:4px;line-height:1.3}
+.ni-title-vi{font-size:14px;color:var(--jade-dk);margin-bottom:4px;font-style:italic;font-family:'Cormorant Garamond',serif;font-weight:500}
+.ni-summary{font-size:12.5px;color:var(--text2);margin-bottom:16px;line-height:1.7;padding:10px 14px;background:var(--surface);border-radius:10px;border-left:3px solid var(--jade-lt)}
+.ni-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.ni-stat{padding:5px 12px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;font-size:11px;color:var(--text2)}.ni-stat b{color:var(--text);font-weight:500}
+.ni-mem{padding:8px 14px;background:var(--jade-bg2);border:1px solid var(--jade-lt);border-radius:10px;font-size:11px;color:var(--jade-dk);display:none;margin-bottom:16px}.ni-mem.on{display:block}
 .ni-style-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .ni-styles{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
-.ni-start{width:100%;padding:14px;background:var(--jade);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 2px 14px rgba(74,158,126,0.25)}
-.ni-start:hover{background:var(--jade-dk)}
+.ni-start{width:100%;padding:14px;background:var(--jade);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 2px 14px rgba(74,158,126,0.25)}.ni-start:hover{background:var(--jade-dk)}
 .ni-divider{height:1px;background:var(--rule);margin:18px 0}
-.ni-ch-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;justify-content:space-between}
-.ni-ch-list{max-height:50vh;overflow-y:auto}
-.ni-ch{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--text2)}
+.ni-ch-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ni-ch-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
+.ni-ch-translate-btn{padding:4px 12px;background:var(--jade-bg2);border:1px solid var(--jade-lt);border-radius:16px;font-size:10px;color:var(--jade-dk);cursor:pointer;font-family:inherit;transition:all .2s}.ni-ch-translate-btn:hover{background:var(--jade);color:#fff}
+.ni-ch-list{max-height:55vh;overflow-y:auto}
+.ni-ch{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .15s}
 .ni-ch:hover{background:var(--surface)}
-.ni-ch-num{font-size:11px;color:var(--text3);width:30px;text-align:right;flex-shrink:0}
-.ni-ch-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ni-ch-num{font-size:11px;color:var(--text3);width:32px;text-align:right;flex-shrink:0}
+.ni-ch-name{font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ni-ch-vi{font-size:11px;color:var(--jade-dk);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-style:italic;display:none}
+.ni-ch.has-vi .ni-ch-name{font-size:11px;color:var(--text3)}
+.ni-ch.has-vi .ni-ch-vi{display:block}
 
-/* ══ READER ══ */
+/* READER */
 .topbar{padding:10px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;background:#fff;position:sticky;top:0;z-index:50;box-shadow:0 1px 8px rgba(74,158,126,0.04)}
 .tb-logo{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--rule);cursor:pointer}
 .tb-title{flex:1;font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tb-btn{background:none;border:1px solid var(--rule);border-radius:9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:15px;transition:all .2s}
-.tb-btn:hover{border-color:var(--jade-lt);color:var(--jade)}
-.mem-badge{display:none;padding:2px 8px;background:var(--jade-bg2);border:1px solid var(--jade-lt);border-radius:16px;font-size:9px;color:var(--jade-dk);white-space:nowrap}
-.mem-badge.on{display:inline-flex;align-items:center;gap:3px}
+.tb-btn{background:none;border:1px solid var(--rule);border-radius:9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:15px;transition:all .2s}.tb-btn:hover{border-color:var(--jade-lt);color:var(--jade)}
+.mem-badge{display:none;padding:2px 8px;background:var(--jade-bg2);border:1px solid var(--jade-lt);border-radius:16px;font-size:9px;color:var(--jade-dk);white-space:nowrap}.mem-badge.on{display:inline-flex;align-items:center;gap:3px}
 .ch-panel{border-bottom:1px solid var(--rule);display:none}.ch-panel.open{display:block;animation:fadeUp .2s}
 .ch-head{padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--rule);font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
 .ch-list{max-height:45vh;overflow-y:auto;background:#fff}
@@ -98,8 +95,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .s-row{display:flex;gap:5px;flex-wrap:wrap}
 .s-chip{padding:5px 12px;background:#fff;border:1px solid var(--rule);border-radius:20px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
 .s-chip:hover{border-color:var(--jade-lt);color:var(--jade)}.s-chip.active{border-color:var(--jade);color:var(--jade-dk);background:var(--jade-bg2)}
-.s-color{width:28px;height:28px;border-radius:50%;border:2px solid var(--rule);cursor:pointer;transition:all .2s}
-.s-color:hover,.s-color.active{border-color:var(--jade)}
+.s-color{width:28px;height:28px;border-radius:50%;border:2px solid var(--rule);cursor:pointer;transition:all .2s}.s-color:hover,.s-color.active{border-color:var(--jade)}
 .s-slider-row{display:flex;align-items:center;gap:10px}
 .s-slider{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--rule2);border-radius:2px;outline:none}
 .s-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--jade);cursor:pointer;border:none}
@@ -111,7 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .ch-nav{padding:8px 16px;border-bottom:1px solid var(--rule);display:none;justify-content:space-between;align-items:center;background:#fff}.ch-nav.open{display:flex}
 .nav-btn{padding:7px 16px;background:#fff;border:1px solid var(--rule);border-radius:9px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
 .nav-btn:hover:not(:disabled){border-color:var(--jade-lt);color:var(--jade)}.nav-btn:disabled{color:var(--text3);opacity:.3;cursor:default}
-.nav-title{font-size:12px;color:var(--jade-dk);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%;text-align:center;font-family:'Cormorant Garamond',serif;font-size:14px}
+.nav-title{font-size:14px;color:var(--jade-dk);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%;text-align:center;font-family:'Cormorant Garamond',serif}
 .status-bar{padding:10px 16px;border-bottom:1px solid var(--rule);display:none;align-items:center;gap:8px;background:var(--surface)}.status-bar.on{display:flex}
 .spinner{width:13px;height:13px;border:1.5px solid var(--rule2);border-top-color:var(--jade);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 .status-text{font-size:12px;color:var(--text2)}
@@ -119,31 +115,26 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 .reader-area{flex:1;padding:44px 20px 100px;background:var(--r-bg);transition:background .3s}
 .reader-body{max-width:660px;margin:0 auto;font-family:var(--r-font);font-size:var(--r-size);line-height:var(--r-lh);color:var(--r-text);font-weight:400;transition:all .3s}
 .reader-body p{margin-bottom:.85em;text-indent:2em}
-.next-btn{display:block;margin:44px auto 0;padding:12px 32px;background:transparent;border:1px solid var(--rule);border-radius:11px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .3s}
-.next-btn:hover{border-color:var(--jade);color:var(--jade)}
+.next-btn{display:block;margin:44px auto 0;padding:12px 32px;background:transparent;border:1px solid var(--rule);border-radius:11px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .3s}.next-btn:hover{border-color:var(--jade);color:var(--jade)}
 .reader-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:35vh;color:var(--text3);font-size:13px;gap:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
-@media(min-width:768px){
-  .topbar,.ch-head,.ch-nav,.status-bar,.error-bar,.settings-drawer{padding-left:32px;padding-right:32px}
-  .ch-item{padding-left:32px;padding-right:32px}.ch-item.active{padding-left:29px}
-  .reader-area{padding:56px 40px 120px}
-}
+@media(min-width:768px){.topbar,.ch-head,.ch-nav,.status-bar,.error-bar,.settings-drawer{padding-left:32px;padding-right:32px}.ch-item{padding-left:32px;padding-right:32px}.ch-item.active{padding-left:29px}.reader-area{padding:56px 40px 120px}}
 </style>
 </head>
 <body>
 <!-- LANDING -->
 <div id="landing" class="screen active">
-  <img src="/static/logo.jpg" class="l-logo" alt="">
+  <img src="/static/logo.jpeg" class="l-logo" alt="">
   <div class="l-title">Novel Translator</div>
   <div class="l-sub">Trung → Việt · Gemini AI</div>
   <div class="l-input-row">
     <input class="l-input" id="landingUrl" placeholder="Dán URL truyện (khuyên dùng all.html)..." onkeydown="if(event.key==='Enter')loadNovel()">
     <button class="l-btn" id="landingBtn" onclick="loadNovel()">Đọc</button>
   </div>
-  <div class="l-styles"><div class="l-styles-label">Phong cách dịch</div><div class="l-styles-row" id="landingStyles">
+  <div class="l-styles"><div class="l-styles-label">Phong cách dịch</div><div class="l-styles-row">
     <button class="style-chip active" data-style="nguyenban" onclick="pickStyle(this)">Nguyên bản</button>
     <button class="style-chip" data-style="cotrang" onclick="pickStyle(this)">Cổ trang</button>
     <button class="style-chip" data-style="hiendai" onclick="pickStyle(this)">Hiện đại</button>
@@ -153,16 +144,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
   <div class="l-status" id="landingStatus" style="display:none"><div class="spinner"></div><span id="landingStatusText"></span></div>
   <div class="l-history" id="historySection" style="display:none"><div class="l-history-title">Đọc gần đây</div><div id="historyList"></div></div>
 </div>
+
 <!-- NOVEL INFO -->
 <div id="novelInfo" class="screen">
   <div class="ni-card">
     <button class="ni-back" onclick="goLanding()">← Quay lại</button>
     <div class="ni-title" id="niTitle">—</div>
     <div class="ni-title-vi" id="niTitleVi"></div>
+    <div class="ni-summary" id="niSummary" style="display:none"></div>
     <div class="ni-stats" id="niStats"></div>
     <div class="ni-mem" id="niMem"></div>
     <div class="ni-style-label">Phong cách dịch</div>
-    <div class="ni-styles" id="niStyles">
+    <div class="ni-styles">
       <button class="style-chip active" data-style="nguyenban" onclick="pickStyle(this)">Nguyên bản</button>
       <button class="style-chip" data-style="cotrang" onclick="pickStyle(this)">Cổ trang</button>
       <button class="style-chip" data-style="hiendai" onclick="pickStyle(this)">Hiện đại</button>
@@ -171,14 +164,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
     </div>
     <button class="ni-start" id="niStartBtn" onclick="enterReader()">Bắt đầu đọc</button>
     <div class="ni-divider"></div>
-    <div class="ni-ch-title"><span>Danh sách chương</span><span id="niChCount"></span></div>
+    <div class="ni-ch-header">
+      <span class="ni-ch-title">Danh sách chương · <span id="niChCount"></span></span>
+      <button class="ni-ch-translate-btn" id="niTransBtn" onclick="translateChapterTitles()">🔄 Dịch tên chương</button>
+    </div>
     <div class="ni-ch-list" id="niChList"></div>
   </div>
 </div>
+
 <!-- READER -->
 <div id="readerScreen" class="screen">
   <div class="topbar">
-    <img src="/static/logo.jpg" class="tb-logo" onclick="goNovelInfo()" title="Thông tin truyện">
+    <img src="/static/logo.jpeg" class="tb-logo" onclick="goNovelInfo()" title="Thông tin truyện">
     <span class="tb-title" id="tbTitle">—</span>
     <span class="mem-badge" id="memBadge">⚡ Memory</span>
     <button class="tb-btn" onclick="togglePanel('chPanel')" title="Mục lục">☰</button>
@@ -196,11 +193,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
     <div class="s-section"><div class="s-label">Cỡ chữ</div><div class="s-slider-row"><input type="range" class="s-slider" id="sizeSlider" min="14" max="28" value="19" oninput="setSize(this.value)"><span class="s-val" id="sizeVal">19</span></div></div>
     <div class="s-section"><div class="s-label">Dãn dòng</div><div class="s-slider-row"><input type="range" class="s-slider" id="lhSlider" min="150" max="300" value="205" step="5" oninput="setLh(this.value)"><span class="s-val" id="lhVal">2.05</span></div></div>
     <div class="s-section"><div class="s-label">Nền đọc</div><div class="s-row" style="gap:8px">
-      <button class="s-color active" style="background:#F2F8F5" data-bg="#F2F8F5" data-text="#1C3830" onclick="setTheme(this)" title="Ngọc"></button>
-      <button class="s-color" style="background:#FFFBF5" data-bg="#FFFBF5" data-text="#3D2E20" onclick="setTheme(this)" title="Kem"></button>
-      <button class="s-color" style="background:#F5EDD6" data-bg="#F5EDD6" data-text="#3A3020" onclick="setTheme(this)" title="Giấy cũ"></button>
-      <button class="s-color" style="background:#1A2A22" data-bg="#1A2A22" data-text="#C8DDD0" onclick="setTheme(this)" title="Xanh tối"></button>
-      <button class="s-color" style="background:#0C0C0C" data-bg="#0C0C0C" data-text="#D8D8D0" onclick="setTheme(this)" title="Đen"></button>
+      <button class="s-color active" style="background:#F2F8F5" data-bg="#F2F8F5" data-text="#1C3830" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#FFFBF5" data-bg="#FFFBF5" data-text="#3D2E20" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#F5EDD6" data-bg="#F5EDD6" data-text="#3A3020" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#1A2A22" data-bg="#1A2A22" data-text="#C8DDD0" onclick="setTheme(this)"></button>
+      <button class="s-color" style="background:#0C0C0C" data-bg="#0C0C0C" data-text="#D8D8D0" onclick="setTheme(this)"></button>
     </div></div>
     <div class="s-section"><div class="s-label">Prompt tuỳ chỉnh</div><textarea class="s-textarea" id="customPrompt" placeholder="Để trống = dùng phong cách đã chọn"></textarea></div>
     <div class="s-section"><div class="s-label">Thuật ngữ thủ công</div><textarea class="s-textarea" id="glossary" placeholder="萧炎 = Tiêu Viêm&#10;斗气 = Đấu Khí"></textarea><div class="s-foot"><span>Kết hợp Memory tự động</span><button class="s-link" onclick="clearCache()">Xóa cache dịch</button></div></div>
@@ -212,7 +209,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 </div>
 
 <script>
-let chapters=[],currentIdx=-1,translated={},novelUrl='',novelTitle='';
+let chapters=[],currentIdx=-1,translated={},novelUrl='',novelTitle='',titlesVi=[];
 let selectedStyle='nguyenban',resumeChapter=-1;
 const $=id=>document.getElementById(id),LS=window.localStorage;
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')}
@@ -227,22 +224,44 @@ async function resumeNovel(i){const h=getHistory()[i];if(!h)return;$('landingUrl
 
 async function loadNovel(){
   const url=$('landingUrl').value.trim();if(!url)return;
-  novelUrl=url;$('landingBtn').disabled=true;
-  $('landingStatus').style.display='flex';$('landingStatusText').textContent='Đang tải mục lục... (trang all.html có thể mất 20-30s)';
+  novelUrl=url;$('landingBtn').disabled=true;titlesVi=[];
+  $('landingStatus').style.display='flex';$('landingStatusText').textContent='Đang tải mục lục (có thể mất 30-60s cho trang all.html)...';
   try{
     const r=await fetch('/api/chapters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
     const d=await r.json();if(!r.ok)throw new Error(d.error);
-    chapters=d.chapters.map((ch,i)=>({...ch,idx:i}));translated={};
-    novelTitle=d.novel_title||url.replace(/https?:\/\/(www\.)?/,'').split('/').slice(0,2).join('/');
-    $('niTitle').textContent=novelTitle;$('niTitleVi').textContent='';
+    chapters=d.chapters;translated={};
+    novelTitle=d.novel_title||'';
+    // Novel info page
+    $('niTitle').textContent=novelTitle;$('niTitleVi').textContent='';$('niSummary').style.display='none';
     $('niStats').innerHTML=`<div class="ni-stat"><b>${chapters.length}</b> chương</div><div class="ni-stat">${d.mode==='all_html'?'⚡ Toàn bộ':'📖 Từng chương'}</div>`;
     $('niChCount').textContent=chapters.length+' chương';
-    $('niChList').innerHTML=chapters.map((ch,i)=>`<div class="ni-ch" onclick="resumeChapter=${i};enterReader()"><span class="ni-ch-num">${i+1}</span><span class="ni-ch-name">${ch.title}</span></div>`).join('');
-    if(resumeChapter>=0)$('niStartBtn').textContent=`Tiếp tục đọc (Ch.${resumeChapter+1})`;
+    renderNovelChList();
+    if(resumeChapter>=0)$('niStartBtn').textContent=`Tiếp tục (Ch.${resumeChapter+1})`;
     else $('niStartBtn').textContent='Bắt đầu đọc';
-    showScreen('novelInfo');initMemory();
+    showScreen('novelInfo');
+    initMemory();
   }catch(e){$('landingStatusText').textContent='❌ '+e.message;setTimeout(()=>{$('landingStatus').style.display='none'},6000)}
   finally{$('landingBtn').disabled=false;$('landingStatus').style.display='none'}
+}
+
+function renderNovelChList(){
+  $('niChList').innerHTML=chapters.map((ch,i)=>{
+    const vi=titlesVi[i]||'';
+    const cls=vi?'ni-ch has-vi':'ni-ch';
+    return `<div class="${cls}" onclick="resumeChapter=${i};enterReader()"><span class="ni-ch-num">${i+1}</span><span class="ni-ch-name">${ch.title}</span><span class="ni-ch-vi">${vi}</span></div>`;
+  }).join('');
+}
+
+async function translateChapterTitles(){
+  const btn=$('niTransBtn');btn.textContent='⏳ Đang dịch...';btn.disabled=true;
+  try{
+    const titles=chapters.map(c=>c.title);
+    const r=await fetch('/api/translate_titles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({titles,novel_url:novelUrl})});
+    const d=await r.json();
+    if(d.titles_vi){titlesVi=d.titles_vi;renderNovelChList();btn.textContent='✓ Đã dịch'}
+    else{btn.textContent='❌ Lỗi'}
+  }catch{btn.textContent='❌ Lỗi'}
+  finally{btn.disabled=false}
 }
 
 async function initMemory(){
@@ -251,7 +270,12 @@ async function initMemory(){
     const b={novel_url:novelUrl};if(chapters.length)b.first_chapter_url=chapters[0].url;
     const r=await fetch('/api/init_memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
     const d=await r.json();
-    if(d.memory){const m=d.memory;n.textContent=`⚡ Memory: ${m.characters} nhân vật · ${m.places} địa danh · ${m.terms} thuật ngữ`;if(m.novel_title_vi)$('niTitleVi').textContent=m.novel_title_vi;if(m.genre)$('niStats').innerHTML+=`<div class="ni-stat">${m.genre}</div>`;updateMemBadge(m)}
+    if(d.memory){const m=d.memory;
+      n.textContent=`⚡ Memory: ${m.characters} nhân vật · ${m.places} địa danh · ${m.terms} thuật ngữ`;
+      if(m.novel_title_vi){$('niTitleVi').textContent=m.novel_title_vi}
+      if(m.genre){$('niStats').innerHTML+=`<div class="ni-stat">${m.genre}</div>`}
+      updateMemBadge(m);
+    }
   }catch{n.textContent='Memory: chưa sẵn sàng'}
 }
 function updateMemBadge(m){const b=$('memBadge');if(m&&(m.characters>0||m.terms>0)){b.textContent=`⚡ ${m.characters} NV · ${m.terms} TN`;b.classList.add('on')}else b.classList.remove('on')}
@@ -262,17 +286,18 @@ function hideStatus(){$('statusBar').classList.remove('on')}
 function showError(m){$('errorBar').classList.add('on');$('errorBar').textContent=m}
 function hideError(){$('errorBar').classList.remove('on')}
 function togglePanel(id){const el=$(id),o=el.classList.contains('open');document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open'));if(!o)el.classList.add('open')}
-function renderCh(){$('chList').innerHTML=chapters.map((ch,i)=>`<div class="ch-item ${i===currentIdx?'active':''}" onclick="openCh(${i})"><span class="ch-num">${i+1}</span><span class="ch-dot ${translated[i]?'done':i===currentIdx?'busy':''}" id="dot${i}"></span><span class="ch-title">${ch.title}</span>${translated[i]?'<span class="ch-ok">✓</span>':''}</div>`).join('')}
+function renderCh(){$('chList').innerHTML=chapters.map((ch,i)=>`<div class="ch-item ${i===currentIdx?'active':''}" onclick="openCh(${i})"><span class="ch-num">${i+1}</span><span class="ch-dot ${translated[i]?'done':i===currentIdx?'busy':''}" id="dot${i}"></span><span class="ch-title">${titlesVi[i]||ch.title}</span>${translated[i]?'<span class="ch-ok">✓</span>':''}</div>`).join('')}
 
 async function openCh(i){
-  currentIdx=i;renderCh();hideError();$('chNav').classList.add('open');$('navTitle').textContent=chapters[i].title;
+  currentIdx=i;renderCh();hideError();$('chNav').classList.add('open');$('navTitle').textContent=titlesVi[i]||chapters[i].title;
   $('prevBtn').disabled=i<=0;$('nextBtn').disabled=i>=chapters.length-1;
   document.querySelectorAll('.ch-panel,.settings-drawer').forEach(x=>x.classList.remove('open'));saveProgress();
   if(translated[i]){renderText(translated[i]);return}
   $('readerBody').innerHTML='<div class="reader-empty"><div class="spinner"></div><span>Đang dịch...</span></div>';
   showStatus('Đang dịch: '+chapters[i].title);const dot=$(`dot${i}`);if(dot)dot.className='ch-dot busy';
   try{
-    const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:chapters[i].url,novel_url:novelUrl,glossary:$('glossary').value,style:selectedStyle,custom_prompt:$('customPrompt').value})});
+    const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:chapters[i].url,novel_url:novelUrl,glossary:$('glossary').value,style:selectedStyle,custom_prompt:$('customPrompt').value})});
     const d=await r.json();hideStatus();
     if(!r.ok){showError(d.error);if(dot)dot.className='ch-dot';return}
     translated[i]=d.translation;if(dot)dot.className='ch-dot done';if(d.memory)updateMemBadge(d.memory);
