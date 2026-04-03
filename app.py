@@ -12,44 +12,26 @@ from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 from curl_cffi import requests as cffi_requests
 
-print("=== APP.PY ĐANG KHỞI ĐỘNG ===")
-
 app = Flask(__name__)
 
 # ====================== CONFIG ======================
-try:
-    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-    print(f"GEMINI_API_KEY: {'✅ Có' if GEMINI_API_KEY else '❌ KHÔNG CÓ'}")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise Exception("Thiếu GEMINI_API_KEY trong Environment Variables")
 
-    if not GEMINI_API_KEY:
-        raise Exception("Thiếu GEMINI_API_KEY trong Environment Variables")
-
-    AI_CLIENT = OpenAI(
-        api_key=GEMINI_API_KEY,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
-    MODEL = "gemini-3.1-flash-lite-preview"
-    print(f"✅ Model: {MODEL} - OpenAI client OK")
-
-except Exception as e:
-    print("🚨 LỖI KHỞI ĐỘNG:")
-    print(str(e))
-    raise
-
-# ====================== NOISE FILTER ======================
-NOISE_RE = re.compile(
-    r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
-    r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名|"
-    r"69书吧|书吧|设置|白天|下一章|上一章|书签|收藏)"
+AI_CLIENT = OpenAI(
+    api_key=GEMINI_API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
 )
+MODEL = "gemini-3.1-flash-lite-preview"
 
-# ====================== CACHE ======================
 CACHE = Path("cache")
-CACHE.mkdir(exist_ok=True, parents=True)
-print(f"✅ Cache folder: {CACHE.absolute()}")
+CACHE.mkdir(exist_ok=True)
+
 
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
+
 
 def get_cache(url, prefix=""):
     p = CACHE / f"{prefix}{cache_key(url)}.json"
@@ -57,16 +39,17 @@ def get_cache(url, prefix=""):
         return json.loads(p.read_text("utf-8"))
     return None
 
+
 def set_cache(url, data, prefix=""):
     p = CACHE / f"{prefix}{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
+
 # ====================== FETCH (ANTI-503) ======================
 def fetch(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Referer": "https://www.69shuba.com/",
     }
     r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=60)
@@ -75,19 +58,22 @@ def fetch(url):
     time.sleep(0.8)
     return BeautifulSoup(r.content, "lxml")
 
+
 def is_all_page(url):
     path = urlparse(url).path.lower()
     return "all.html" in path or "all.htm" in path
 
-# ====================== PARSE CATALOG (69SHUBA BOOK PAGE) ======================
+
+# ====================== PARSE CATALOG (MỚI - CHO /book/51230/) ======================
 def parse_catalog(url):
-    """Đặc biệt tối ưu cho trang https://www.69shuba.com/book/51230/"""
+    """Hỗ trợ trang catalog https://www.69shuba.com/book/51230/"""
     cached = get_cache(url, prefix="catalog_")
     if cached:
         return cached
 
     soup = fetch(url)
 
+    # Novel title
     title_tag = soup.find("title")
     novel_title = ""
     if title_tag:
@@ -96,7 +82,7 @@ def parse_catalog(url):
     chapters = []
     seen = set()
 
-    # 1. Tìm trong #catalog (cấu trúc chính)
+    # Tìm trong #catalog (cấu trúc chính của 69shuba)
     catalog = soup.select_one("#catalog") or soup.select_one(".catalog")
     if catalog:
         for a in catalog.find_all("a"):
@@ -108,7 +94,7 @@ def parse_catalog(url):
                     seen.add(full)
                     chapters.append({"title": title, "url": full})
 
-    # 2. Fallback mạnh: tìm tất cả link có số chương
+    # Fallback: tìm tất cả link có số chương
     if len(chapters) < 20:
         for a in soup.find_all("a"):
             href = a.get("href", "").strip()
@@ -123,7 +109,67 @@ def parse_catalog(url):
     set_cache(url, result, prefix="catalog_")
     return result
 
-# ====================== STANDARD FUNCTIONS ======================
+
+# ====================== PARSE ALL.HTML (GIỮ NGUYÊN GỐC) ======================
+TITLE_RE = re.compile(r'第[零一二三四五六七八九十百千万\d]{1,10}[章节回集卷]\s*[^\n]{0,60}')
+NOISE_RE = re.compile(
+    r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
+    r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名|"
+    r"69书吧|书吧|设置|白天|下一章|上一章)"
+)
+
+def parse_all_html(url):
+    cached = get_cache(url, prefix="allhtml_")
+    if cached:
+        return cached
+
+    soup = fetch(url)
+
+    title_tag = soup.find("title")
+    novel_title = ""
+    if title_tag:
+        novel_title = title_tag.get_text(strip=True).split("_")[0].split("-")[0].strip()
+
+    # Remove noise
+    for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
+        tag.decompose()
+
+    content_el = None
+    for sel in ["#content", "#all", "#at", ".content", "#BookText", "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
+        c = soup.select_one(sel)
+        if c and len(c.get_text(strip=True)) > 500:
+            content_el = c
+            break
+
+    if not content_el:
+        return {"title": novel_title, "chapters": []}
+
+    for br in content_el.find_all("br"):
+        br.replace_with("\n")
+
+    full_text = content_el.get_text(separator="\n")
+    matches = list(TITLE_RE.finditer(full_text))
+    if not matches:
+        return {"title": novel_title, "chapters": []}
+
+    chapters = []
+    for i, m in enumerate(matches):
+        title = m.group().strip()
+        start = m.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
+        raw_content = full_text[start:end].strip()
+        lines = [l.strip() for l in raw_content.split("\n") if l.strip()]
+        lines = [l for l in lines if not NOISE_RE.search(l)]
+        content = "\n\n".join(lines)
+        if len(content) > 30:
+            chapters.append({"title": title, "content": content})
+
+    result = {"title": novel_title, "chapters": chapters}
+    set_cache(url, result, prefix="allhtml_")
+    return result
+
+
+# ====================== CÁC HÀM CÒN LẠI GIỮ NGUYÊN 100% ======================
 def get_chapters_standard(url):
     cached = get_cache(url, prefix="chapters_")
     if cached:
@@ -133,7 +179,8 @@ def get_chapters_standard(url):
     selectors = [
         "#list a", ".listmain a", ".chapter-list a", ".mulu a",
         "#chapterList a", "dd a", ".book-list a", ".chapters a",
-        ".catalog a", "#catalog a"
+        "#dir a", ".book-chapter a", ".catalog li a", ".mu_contain a",
+        "#catalog a", ".centent a", "ul.mulu_list a",
     ]
     links = []
     for sel in selectors:
@@ -153,6 +200,7 @@ def get_chapters_standard(url):
     set_cache(url, chapters, prefix="chapters_")
     return chapters
 
+
 def get_content_standard(url):
     cached = get_cache(url, prefix="raw_")
     if cached:
@@ -160,34 +208,32 @@ def get_content_standard(url):
 
     soup = fetch(url)
 
-    # 69SHUBA CHAPTER SPECIAL PARSING
+    # 69SHUBA CHAPTER SPECIAL
     if "69shuba.com" in url or "69read.net" in url:
         el = soup.select_one(".txtnav")
         if el:
             for bad in el.select(".txtinfo, .yueduad1, .bottom-ad, .bottom-ad2, .page1, #txtright, .tools, script, style, header, footer, nav"):
                 bad.decompose()
-            if el.find("h1"):
-                el.find("h1").decompose()
-
+            h1 = el.find("h1")
+            if h1:
+                h1.decompose()
             for br in el.find_all("br"):
                 br.replace_with("\n")
-
             text = el.get_text(separator="\n")
             lines = [l.strip() for l in text.split("\n") if l.strip()]
-
             cleaned = [l for l in lines if not NOISE_RE.search(l) and not any(x in l for x in ["69书吧","上一章","下一章","目录","书签","收藏"])]
             final = "\n\n".join(cleaned)
-
             if len(final) > 100:
                 set_cache(url, final, prefix="raw_")
                 return final
 
-    # FALLBACK
+    # FALLBACK GỐC
     for t in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
         t.decompose()
 
     el = None
-    for sel in ["#content", "#chaptercontent", ".chapter-content", "#BookText", ".txtnav", "#txt"]:
+    for sel in ["#content", "#chaptercontent", ".chapter-content", "#BookText",
+                ".read-content", ".txtnav", "#txt", ".book-content"]:
         c = soup.select_one(sel)
         if c and len(c.get_text(strip=True)) > 100:
             el = c
@@ -207,13 +253,16 @@ def get_content_standard(url):
     set_cache(url, final, prefix="raw_")
     return final
 
-# ====================== MEMORY & TRANSLATE (GIỮ NGUYÊN) ======================
+
+# ====================== MEMORY, TRANSLATE, ROUTES (GIỮ NGUYÊN) ======================
 def get_memory(url):
     m = get_cache(url, prefix="memory_")
     return m or {"characters": {}, "places": {}, "terms": {}, "summary": "", "n": 0}
 
+
 def save_memory(url, m):
     set_cache(url, m, prefix="memory_")
+
 
 def build_memory_block(mem, glossary=""):
     terms = {}
@@ -230,6 +279,7 @@ def build_memory_block(mem, glossary=""):
     if mem.get("summary"):
         parts.append(f"【BỐI CẢNH】 {mem['summary']}")
     return "\n\n".join(parts)
+
 
 def extract_memory(cn, vn, mem, url):
     try:
@@ -256,6 +306,7 @@ CHỈ JSON."""}],
     except Exception as e:
         print(f"Memory extract error: {e}")
     return mem
+
 
 def init_memory(url, text):
     mem = get_memory(url)
@@ -293,6 +344,7 @@ CHỈ JSON."""}],
         print(f"Memory init error: {e}")
     return mem
 
+
 STYLES = {
     "cotrang": "Dịch phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiếm hiệp.",
     "hiendai": "Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi.",
@@ -300,6 +352,7 @@ STYLES = {
     "satnghia": "Dịch sát nghĩa, chính xác từng câu.",
     "nguyenban": "Giữ nguyên phong cách gốc, cân bằng chính xác và tự nhiên.",
 }
+
 
 def translate(text, glossary="", style="nguyenban", custom_prompt="",
              chapter_url="", novel_url=""):
@@ -379,10 +432,12 @@ QUY TẮC:
 
     return final
 
+
 # ====================== ROUTES ======================
 @app.route("/")
 def index():
-    return render_template("index.html")   # bạn đã rename index-3.html thành index.html
+    return render_template("index.html")
+
 
 @app.route("/api/chapters", methods=["POST"])
 def api_chapters():
@@ -390,23 +445,31 @@ def api_chapters():
     if not url:
         return jsonify({"error": "Vui lòng nhập URL"}), 400
     try:
-        # Trang catalog của 69shuba
+        # TRANG CATALOG MỚI
         if "69shuba.com/book/" in url or "69read.net/book/" in url:
             data = parse_catalog(url)
-            ch_list = [{"title": ch["title"], "url": ch["url"]} for ch in data["chapters"]]
+            ch_list = []
+            for ch in data["chapters"]:
+                ch_list.append({"title": ch["title"], "url": ch["url"]})
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
                 "mode": "catalog",
             })
+        # TRANG ALL.HTML
         elif is_all_page(url):
-            data = parse_catalog(url)
-            ch_list = [{"title": ch["title"], "url": ch["url"]} for ch in data["chapters"]]
+            data = parse_all_html(url)
+            ch_list = []
+            for i, ch in enumerate(data["chapters"]):
+                vurl = f"{url}#ch_{i}"
+                set_cache(vurl, ch["content"], prefix="raw_")
+                ch_list.append({"title": ch["title"], "url": vurl})
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
                 "mode": "all_html",
             })
+        # TRANG THƯỜNG
         else:
             chs = get_chapters_standard(url)
             if not chs:
@@ -427,7 +490,8 @@ def api_chapters():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# (các route init_memory, translate, _ms giữ nguyên như trước)
+
+# (các route init_memory, translate, _ms giữ nguyên như code gốc của bạn)
 @app.route("/api/init_memory", methods=["POST"])
 def api_init_memory():
     d = request.json
@@ -485,5 +549,4 @@ def _ms(m):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"🚀 Server running on port {port}")
     app.run(host="0.0.0.0", port=port)
