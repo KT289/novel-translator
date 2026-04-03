@@ -12,26 +12,44 @@ from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 from curl_cffi import requests as cffi_requests
 
+print("=== APP.PY ĐANG KHỞI ĐỘNG ===")
+
 app = Flask(__name__)
 
 # ====================== CONFIG ======================
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise Exception("Thiếu GEMINI_API_KEY trong Environment Variables")
+try:
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+    print(f"GEMINI_API_KEY: {'✅ Có' if GEMINI_API_KEY else '❌ KHÔNG CÓ'}")
 
-AI_CLIENT = OpenAI(
-    api_key=GEMINI_API_KEY,
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    if not GEMINI_API_KEY:
+        raise Exception("Thiếu GEMINI_API_KEY trong Environment Variables")
+
+    AI_CLIENT = OpenAI(
+        api_key=GEMINI_API_KEY,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
+    MODEL = "gemini-3.1-flash-lite-preview"
+    print(f"✅ Model: {MODEL} - OpenAI client OK")
+
+except Exception as e:
+    print("🚨 LỖI KHỞI ĐỘNG:")
+    print(str(e))
+    raise
+
+# ====================== NOISE FILTER ======================
+NOISE_RE = re.compile(
+    r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
+    r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名|"
+    r"69书吧|书吧|设置|白天|下一章|上一章|书签|收藏)"
 )
-MODEL = "gemini-3.1-flash-lite-preview"
 
+# ====================== CACHE ======================
 CACHE = Path("cache")
-CACHE.mkdir(exist_ok=True)
-
+CACHE.mkdir(exist_ok=True, parents=True)
+print(f"✅ Cache folder: {CACHE.absolute()}")
 
 def cache_key(url):
     return hashlib.md5(url.encode()).hexdigest()
-
 
 def get_cache(url, prefix=""):
     p = CACHE / f"{prefix}{cache_key(url)}.json"
@@ -39,122 +57,72 @@ def get_cache(url, prefix=""):
         return json.loads(p.read_text("utf-8"))
     return None
 
-
 def set_cache(url, data, prefix=""):
     p = CACHE / f"{prefix}{cache_key(url)}.json"
     p.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
 
-
-# ====================== FETCH ======================
+# ====================== FETCH (ANTI-503) ======================
 def fetch(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
         "Accept-Language": "vi-VN,vi;q=0.9,zh-CN;q=0.8",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Referer": "https://www.69shuba.com/",
     }
     r = cffi_requests.get(url, headers=headers, impersonate="chrome", timeout=60)
     if r.status_code != 200:
-        raise Exception(f"HTTP {r.status_code} - Site 69shuba chặn request (thử lại sau 5s)")
-    
-    time.sleep(0.7)   # ← Quan trọng: tránh rate-limit 503 của site
+        raise Exception(f"HTTP {r.status_code}")
+    time.sleep(0.8)  # Giảm rate limit
     return BeautifulSoup(r.content, "lxml")
 
+def is_all_page(url):
+    path = urlparse(url).path.lower()
+    return "all.html" in path or "all.htm" in path
 
-# ====================== PARSE ALL.HTML (UPDATED) ======================
+# ====================== PARSE ALL.HTML (69SHUBA SUPPORT) ======================
 def parse_all_html(url):
-    """Parse all.html - Hỗ trợ CẢ 2 kiểu:
-       - Full-text dump (cũ)
-       - Directory list (69read.net)"""
     cached = get_cache(url, prefix="allhtml_")
     if cached:
         return cached
 
     soup = fetch(url)
 
-    # Novel title
     title_tag = soup.find("title")
     novel_title = ""
     if title_tag:
         novel_title = title_tag.get_text(strip=True).split("_")[0].split("-")[0].strip()
 
-    # === 1. THỬ LẤY DANH SÁCH CHƯƠNG (TOC MODE - 69read.net) ===
+    # === 1. LẤY DANH SÁCH CHƯƠNG TỪ all.html ===
     chapters = []
     seen = set()
-    selectors = ["li a", "ul a", ".directory a", "#directory a", ".list a",
-                 ".chapter-list a", ".mulu a", "dd a"]
 
-    for sel in selectors:
-        for a in soup.select(sel):
-            href = a.get("href", "").strip()
-            title = a.get_text(strip=True).strip()
-            if href and title and re.search(r'第[0-9]+章', title) or "章" in title:
-                full = urljoin(url, href)
-                if full not in seen and not full.endswith(('.js', '.css')):
-                    seen.add(full)
-                    chapters.append({"title": title, "url": full})
+    # Tìm tất cả link chứa "章"
+    for a in soup.find_all("a"):
+        href = a.get("href", "").strip()
+        title = a.get_text(strip=True).strip()
+        if href and title and re.search(r'第.*[章回]', title):
+            full_url = urljoin(url, href)
+            if full_url not in seen:
+                seen.add(full_url)
+                chapters.append({"title": title, "url": full_url})
 
-    # Fallback tìm tất cả link có số chương
     if len(chapters) < 5:
-        for a in soup.find_all("a"):
-            href = a.get("href", "").strip()
-            title = a.get_text(strip=True).strip()
-            if href and title and re.search(r'第[0-9]+章', title):
-                full = urljoin(url, href)
-                if full not in seen:
-                    seen.add(full)
-                    chapters.append({"title": title, "url": full})
-
-    # === 2. Nếu không tìm thấy nhiều chương → thử full-text mode cũ ===
-    if len(chapters) < 5:
-        # (giữ nguyên logic cũ của bạn)
-        for tag in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
-            tag.decompose()
-
-        content_el = None
-        for sel in ["#content", "#all", "#at", ".content", "#BookText",
-                    "#chaptercontent", ".chapter-content", ".txtnav", "#txt"]:
-            c = soup.select_one(sel)
-            if c and len(c.get_text(strip=True)) > 500:
-                content_el = c
-                break
-
-        if not content_el:
-            best, best_len = None, 0
-            for c in soup.find_all(["div", "article", "section"]):
-                txt = c.get_text(strip=True)
-                if len(txt) > best_len:
-                    best, best_len = c, len(txt)
-            if best and best_len > 500:
-                content_el = best
-
-        if content_el:
-            for br in content_el.find_all("br"):
-                br.replace_with("\n")
-            full_text = content_el.get_text(separator="\n")
-
-            TITLE_RE = re.compile(r'第[零一二三四五六七八九十百千万\d]{1,10}[章节回集卷]\s*[^\n]{0,60}')
-            matches = list(TITLE_RE.finditer(full_text))
-            if matches:
-                chapters = []
-                for i, m in enumerate(matches):
-                    title = m.group().strip()
-                    start = m.end()
-                    end = matches[i + 1].start() if i + 1 < len(matches) else len(full_text)
-                    raw_content = full_text[start:end].strip()
-                    lines = [l.strip() for l in raw_content.split("\n") if l.strip()]
-                    content = "\n\n".join(lines)
-                    if len(content) > 30:
-                        chapters.append({"title": title, "content": content})
+        # Fallback selectors
+        for sel in ["li a", ".list a", "dd a", "ul a"]:
+            for a in soup.select(sel):
+                href = a.get("href", "").strip()
+                title = a.get_text(strip=True).strip()
+                if href and title and "章" in title:
+                    full_url = urljoin(url, href)
+                    if full_url not in seen:
+                        seen.add(full_url)
+                        chapters.append({"title": title, "url": full_url})
 
     result = {"title": novel_title, "chapters": chapters}
     set_cache(url, result, prefix="allhtml_")
     return result
 
-
-# ====================== CÁC HÀM CÒN LẠI GIỮ NGUYÊN ======================
-# (get_chapters_standard, get_content_standard, memory, translate, v.v. KHÔNG thay đổi)
-
+# ====================== STANDARD FUNCTIONS ======================
 def get_chapters_standard(url):
     cached = get_cache(url, prefix="chapters_")
     if cached:
@@ -164,8 +132,6 @@ def get_chapters_standard(url):
     selectors = [
         "#list a", ".listmain a", ".chapter-list a", ".mulu a",
         "#chapterList a", "dd a", ".book-list a", ".chapters a",
-        "#dir a", ".book-chapter a", ".catalog li a", ".mu_contain a",
-        "#catalog a", ".centent a", "ul.mulu_list a",
     ]
     links = []
     for sel in selectors:
@@ -185,7 +151,6 @@ def get_chapters_standard(url):
     set_cache(url, chapters, prefix="chapters_")
     return chapters
 
-
 def get_content_standard(url):
     cached = get_cache(url, prefix="raw_")
     if cached:
@@ -193,47 +158,34 @@ def get_content_standard(url):
 
     soup = fetch(url)
 
-    # ====================== XỬ LÝ ĐẶC BIỆT CHO 69SHUBA.COM ======================
+    # 69SHUBA SPECIAL PARSING
     if "69shuba.com" in url or "69read.net" in url:
         el = soup.select_one(".txtnav")
         if el:
-            # Xóa hết phần rác
             for bad in el.select(".txtinfo, .yueduad1, .bottom-ad, .bottom-ad2, .page1, #txtright, .tools, script, style, header, footer, nav"):
                 bad.decompose()
+            if el.find("h1"):
+                el.find("h1").decompose()
 
-            # Xóa tiêu đề chương (không cần lặp lại trong nội dung)
-            h1 = el.find("h1")
-            if h1:
-                h1.decompose()
-
-            # br → newline
             for br in el.find_all("br"):
                 br.replace_with("\n")
 
             text = el.get_text(separator="\n")
             lines = [l.strip() for l in text.split("\n") if l.strip()]
 
-            # Lọc noise mạnh hơn
-            cleaned = []
-            for l in lines:
-                if NOISE_RE.search(l):
-                    continue
-                if any(x in l for x in ["69书吧", "上一章", "下一章", "目录", "书签", "收藏", "设置", "白天", "广告"]):
-                    continue
-                cleaned.append(l)
-
+            cleaned = [l for l in lines if not NOISE_RE.search(l) and not any(x in l for x in ["69书吧","上一章","下一章","目录","书签","收藏"])]
             final = "\n\n".join(cleaned)
-            if len(final) > 50:   # đảm bảo có nội dung
+
+            if len(final) > 100:
                 set_cache(url, final, prefix="raw_")
                 return final
 
-    # ====================== LOGIC CŨ (dành cho các site khác) ======================
+    # FALLBACK
     for t in soup.find_all(["script", "style", "iframe", "header", "footer", "nav"]):
         t.decompose()
 
     el = None
-    for sel in ["#content", "#chaptercontent", ".chapter-content", "#BookText",
-                ".read-content", ".txtnav", "#txt", ".book-content"]:
+    for sel in ["#content", "#chaptercontent", ".chapter-content", "#BookText", ".txtnav", "#txt"]:
         c = soup.select_one(sel)
         if c and len(c.get_text(strip=True)) > 100:
             el = c
@@ -247,26 +199,19 @@ def get_content_standard(url):
 
     text = el.get_text(separator="\n")
     lines = [l.strip() for l in text.split("\n") if l.strip()]
-    cleaned = [l for l in lines if not re.search(
-        r"(推荐|收藏|上一[章页]|下一[章页]|目录|返回|广告|本站|书签|加入书架|"
-        r"投票|打赏|www\.|\.com|\.net|http|最新章节|手机阅读|请牢记|备用域名)", l)]
+    cleaned = [l for l in lines if not NOISE_RE.search(l)]
     final = "\n\n".join(cleaned)
 
     set_cache(url, final, prefix="raw_")
     return final
 
-
-# (memory functions, translate function giữ nguyên 100% như code cũ của bạn)
-
-
+# ====================== MEMORY ======================
 def get_memory(url):
     m = get_cache(url, prefix="memory_")
     return m or {"characters": {}, "places": {}, "terms": {}, "summary": "", "n": 0}
 
-
 def save_memory(url, m):
     set_cache(url, m, prefix="memory_")
-
 
 def build_memory_block(mem, glossary=""):
     terms = {}
@@ -283,7 +228,6 @@ def build_memory_block(mem, glossary=""):
     if mem.get("summary"):
         parts.append(f"【BỐI CẢNH】 {mem['summary']}")
     return "\n\n".join(parts)
-
 
 def extract_memory(cn, vn, mem, url):
     try:
@@ -310,7 +254,6 @@ CHỈ JSON."""}],
     except Exception as e:
         print(f"Memory extract error: {e}")
     return mem
-
 
 def init_memory(url, text):
     mem = get_memory(url)
@@ -348,7 +291,7 @@ CHỈ JSON."""}],
         print(f"Memory init error: {e}")
     return mem
 
-
+# ====================== TRANSLATE ======================
 STYLES = {
     "cotrang": "Dịch phong cách cổ trang, ngôn ngữ trang trọng, giàu hình ảnh kiếm hiệp.",
     "hiendai": "Dịch tự nhiên, hiện đại, dễ đọc, giọng văn gần gũi.",
@@ -356,7 +299,6 @@ STYLES = {
     "satnghia": "Dịch sát nghĩa, chính xác từng câu.",
     "nguyenban": "Giữ nguyên phong cách gốc, cân bằng chính xác và tự nhiên.",
 }
-
 
 def translate(text, glossary="", style="nguyenban", custom_prompt="",
              chapter_url="", novel_url=""):
@@ -436,8 +378,7 @@ QUY TẮC:
 
     return final
 
-
-# ====================== ROUTES (chỉ sửa phần all.html) ======================
+# ====================== ROUTES ======================
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -453,13 +394,7 @@ def api_chapters():
             data = parse_all_html(url)
             ch_list = []
             for ch in data["chapters"]:
-                # Hỗ trợ cả 2 kiểu: full-text (có content) và directory (có url)
-                if "url" in ch:
-                    ch_list.append({"title": ch["title"], "url": ch["url"]})
-                else:
-                    vurl = f"{url}#ch_{len(ch_list)}"
-                    set_cache(vurl, ch["content"], prefix="raw_")
-                    ch_list.append({"title": ch["title"], "url": vurl})
+                ch_list.append({"title": ch["title"], "url": ch["url"]})
             return jsonify({
                 "chapters": ch_list,
                 "novel_title": data.get("title", ""),
@@ -486,7 +421,6 @@ def api_chapters():
         return jsonify({"error": str(e)}), 500
 
 
-# (các route còn lại giữ nguyên)
 @app.route("/api/init_memory", methods=["POST"])
 def api_init_memory():
     d = request.json
@@ -543,4 +477,6 @@ def _ms(m):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    print(f"🚀 Server running on port {port}")
+    app.run(host="0.0.0.0", port=port)
